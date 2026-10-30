@@ -5,15 +5,17 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package first.robot.subsystems.drive.gyro;
+package frc.robot.subsystems.drive.gyro;
 
 import static org.wpilib.units.Units.Degrees;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.Pigeon2;
+
+import robot.constants.RobotConstants;
+
 import org.wpilib.units.measure.Angle;
-import first.robot.constants.RobotConstants;
 
 /** IO implementation for Pigeon2 */
 public class GyroHardware implements GyroIO {

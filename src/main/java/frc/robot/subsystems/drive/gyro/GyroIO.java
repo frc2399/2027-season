@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file at
 // the root directory of this project.
 
-package first.robot.subsystems.drive.gyro;
+package frc.robot.subsystems.drive.gyro;
 
 import com.ctre.phoenix6.StatusSignal;
 import org.wpilib.units.measure.Angle;

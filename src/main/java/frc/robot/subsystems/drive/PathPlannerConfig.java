@@ -1,4 +1,4 @@
-package first.robot.subsystems.drive;
+package frc.robot.subsystems.drive;
 
 import static org.wpilib.units.Units.KilogramSquareMeters;
 import static org.wpilib.units.Units.Kilograms;
@@ -7,7 +7,8 @@ import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.system.plant.DCMotor;
 import org.wpilib.units.measure.Mass;
 import org.wpilib.units.measure.MomentOfInertia;
-import first.robot.SubsystemFactory;
+
+import frc.robot.SubsystemFactory;
 
 public final class PathPlannerConfig {
     public static final Mass ROBOT_MASS;

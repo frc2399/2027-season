@@ -1,4 +1,4 @@
-package first.robot.subsystems.drive;
+package frc.robot.subsystems.drive;
 
 import static org.wpilib.units.Units.Amps;
 import static org.wpilib.units.Units.Inches;
@@ -14,22 +14,27 @@ import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
-import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkLowLevel.ControlType;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkLowLevel;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.util.CANPorts;
+
+import frc.robot.constants.RobotConstants;
+import frc.robot.constants.RobotConstants.MotorConstants;
+
+import org.wpilib.hardware.bus.CANPort;
 import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.util.Units;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.telemetry.Telemetry;
-import first.robot.RobotConstants;
-import first.robot.constants.RobotConstants.MotorConstants;
 
 public class SwerveModuleHardwareVortex implements SwerveModuleIO {
 
@@ -106,7 +111,6 @@ public class SwerveModuleHardwareVortex implements SwerveModuleIO {
     private static final double TURNING_KS = 0;
     private static final double TURNING_KV = 0;
     private static final double TURNING_KA = 0;
-
     private static final double VOLTAGE_COMPENSATION = 12;
 
     private static final SparkBaseConfig.IdleMode DRIVING_MOTOR_IDLE_MODE =
@@ -116,10 +120,14 @@ public class SwerveModuleHardwareVortex implements SwerveModuleIO {
 
     public SwerveModuleHardwareVortex(
             int drivingCanId, int turningCanId, double chassisAngularOffset, String name) {
+        CANPort drivingCanPort = com.revrobotics.util.CANPorts.fromBusId(drivingCanId);
+        CANPort turningCanPort = com.revrobotics.util.CANPorts.fromBusId(turningCanId);
+        
         this.chassisAngularOffset = chassisAngularOffset;
         this.name = name;
-        drivingSparkFlex = new SparkFlex(drivingCanId, MotorType.kBrushless);
-        turningSparkMax = new SparkMax(turningCanId, MotorType.kBrushless);
+        drivingSparkFlex = new SparkFlex(drivingCanPort, drivingCanId, MotorType.kBrushless);
+        turningSparkMax = new SparkMax(turningCanPort, turningCanId, MotorType.kBrushless);
+                
 
         // get from config!
         DRIVING_KS = DriveConfig.kS;

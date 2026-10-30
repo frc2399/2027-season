@@ -1,4 +1,4 @@
-package first.robot.subsystems.drive;
+package frc.robot.subsystems.drive;
 
 import static org.wpilib.units.Units.Inches;
 import static org.wpilib.units.Units.MetersPerSecond;
@@ -9,7 +9,8 @@ import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.LinearAcceleration;
 import org.wpilib.units.measure.LinearVelocity;
-import first.robot.SubsystemFactory;
+
+import robot.SubsystemFactory;
 
 public final class DriveConfig {
     public static final double kS;
@@ -29,54 +30,6 @@ public final class DriveConfig {
 
     static {
         switch (SubsystemFactory.getRobotType()) {
-            case BUBBLES:
-                kS = 0.05;
-                kV = 2.29;
-                DRIVE_P = 0.4;
-                DRIVE_D = 0;
-                TURN_P = 1.0;
-                TURN_D = 0.001;
-                HEADING_P = 1.1;
-                HEADING_D = 0.05;
-                PINION_TEETH = 12;
-                TRACK_WIDTH = Inches.of(24.5);
-                TRACK_LENGTH = Inches.of(26.5);
-                MAX_ACCELERATION = MetersPerSecondPerSecond.of(9.81);
-                MAX_SPEED = MetersPerSecond.of(4.3);
-                MAX_ANGULAR_VELOCITY = RadiansPerSecond.of(2 * Math.PI);
-                break;
-            case MOZART:
-                kS = 0.1;
-                kV = 2.29;
-                DRIVE_P = 0.4;
-                DRIVE_D = 0;
-                TURN_P = 1.0;
-                TURN_D = 0.001;
-                HEADING_P = 1.1;
-                HEADING_D = 0.05;
-                PINION_TEETH = 12;
-                TRACK_WIDTH = Inches.of(26 - (2 * 1.75));
-                TRACK_LENGTH = Inches.of(26 - (2 * 1.75));
-                MAX_ACCELERATION = MetersPerSecondPerSecond.of(9.81); // TODO: characterize
-                MAX_SPEED = MetersPerSecond.of(4.3);
-                MAX_ANGULAR_VELOCITY = RadiansPerSecond.of(2 * Math.PI);
-                break;
-            case BETA:
-                kS = 0.1;
-                kV = 2.17;
-                DRIVE_P = 0.2;
-                DRIVE_D = 0;
-                TURN_P = 1.0;
-                TURN_D = 0.001;
-                HEADING_P = 2;
-                HEADING_D = 0.05;
-                PINION_TEETH = 13;
-                TRACK_WIDTH = Inches.of(20.5);
-                TRACK_LENGTH = Inches.of(26.5);
-                MAX_ACCELERATION = MetersPerSecondPerSecond.of(9.81);
-                MAX_SPEED = MetersPerSecond.of(4.3);
-                MAX_ANGULAR_VELOCITY = RadiansPerSecond.of(2 * Math.PI);
-                break;
             case COMP:
                 kS = 0.15;
                 kV = 2.23;

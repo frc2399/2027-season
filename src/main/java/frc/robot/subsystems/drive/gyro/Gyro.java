@@ -1,11 +1,11 @@
-package first.robot.subsystems.drive.gyro;
+package frc.robot.subsystems.drive.gyro;
 
 import static org.wpilib.units.Units.Degrees;
 
 import com.ctre.phoenix6.StatusSignal;
 import org.wpilib.units.measure.Angle;
-import org.wpilib.wpilibj2.command.Command;
-import org.wpilib.wpilibj2.command.Commands;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.Commands;
 
 public class Gyro {
     private GyroIO io;
