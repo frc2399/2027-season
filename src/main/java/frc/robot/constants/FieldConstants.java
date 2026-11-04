@@ -3,7 +3,13 @@ package frc.robot.constants;
 import static org.wpilib.units.Units.*;
 
 import org.wpilib.units.measure.Distance;
+import org.wpilib.units.measure.Time;
 import org.wpilib.driverstation.Alliance;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Transform2d;
+import org.wpilib.math.geometry.Translation2d;
+
 import java.util.Optional;
 
 public final class FieldConstants {
@@ -21,6 +27,22 @@ public final class FieldConstants {
     public static final Distance FUEL_PIT_HALF_WIDTH = Inches.of(35.95);
     public static final Distance LENGTH_OF_BUMP = Inches.of(73.00 + 12.00);
 
+    public static final Pose2d FIELD_CENTER =
+            new Pose2d(Inches.of(325.61), Inches.of(158.32), Rotation2d.ZERO);
+    public static final Pose2d RED_CENTER_OF_HUB_POSE =
+            new Pose2d(Inches.of(181.56 + (2 * 143.50)), Inches.of(158.32), Rotation2d.ZERO);
+    public static final Pose2d BLUE_CENTER_OF_HUB_POSE =
+            new Pose2d(Inches.of(181.56), Inches.of(158.32), Rotation2d.ZERO);
+    public static final Pose2d FRONT_OF_RED_HUB =
+            RED_CENTER_OF_HUB_POSE.plus(
+                    new Transform2d(HALF_WIDTH_OF_HUB, Inches.of(0), Rotation2d.ZERO));
+    public static final Pose2d FRONT_OF_BLUE_HUB =
+            BLUE_CENTER_OF_HUB_POSE.plus(
+                    new Transform2d(
+                            HALF_WIDTH_OF_HUB.unaryMinus(), Inches.of(0), Rotation2d.ZERO));
+    public static final Pose2d BACK_OF_DEPOT =
+            new Pose2d(Inches.of(0), Inches.of(158.84 + 75.93), Rotation2d.k180deg);
+
     public static class FieldBoundaries {
         public static final Distance RED_ZONE_BOUNDARY_X = Inches.of(181.56 + (2 * 143.50));
         public static final Distance RED_DRIVER_STATION_WALL_X = Meters.of(16.94);
@@ -31,6 +53,13 @@ public final class FieldConstants {
         public static final Distance HORIZONTAL_CENTER_LINE = Meters.of(4.034663);
         public static final Distance SCREEN_RANGE = Meters.of(0);
     }
+    public static class SpeedConstants {
+        public static final double MAIN_LOOP_FREQUENCY_HZ = 50;
+        public static final Time MAIN_LOOP_FREQUENCY =
+                Milliseconds.of(1000 / MAIN_LOOP_FREQUENCY_HZ);
+        public static final double LOGGING_FREQUENCY_HZ = 10;
+        public static final int LOGGING_FREQUENCY_MS = (int) (1000 / LOGGING_FREQUENCY_HZ);
+    }
 
     public static class HubConstants {
         public static class AlignmentTargetPoseConstants {
@@ -38,7 +67,21 @@ public final class FieldConstants {
             public static final Distance FUEL_RADIUS = Inches.of(2.955);
 
             // values taken from field drawings
-            
         }
-    }
+        public static final Pose2d RED_CENTER_OF_HUB_POSE =
+                    new Pose2d(
+                            Inches.of(181.56 + (2 * 143.50)), Inches.of(158.32), Rotation2d.ZERO);
+            public static final Pose2d BLUE_CENTER_OF_HUB_POSE =
+                    new Pose2d(Inches.of(181.56), Inches.of(158.32), Rotation2d.ZERO);
+            public static final Pose2d BLUE_OUTPOST_ALIGN_POSE =
+                    new Pose2d(new Translation2d(Meters.of(3.24), Meters.of(2)), Rotation2d.ZERO);
+            public static final Pose2d RED_OUTPOST_ALIGN_POSE =
+                    new Pose2d(Meters.of(13), Meters.of(6), Rotation2d.ZERO);
+            public static final Pose2d BLUE_DEPOT_ALIGN_POSE =
+                    new Pose2d(new Translation2d(Meters.of(3.24), Meters.of(6)), Rotation2d.ZERO);
+            public static final Pose2d RED_DEPOT_ALIGN_POSE =
+                    new Pose2d(Meters.of(13), Meters.of(2), Rotation2d.ZERO);
+        
+        }
 }
+

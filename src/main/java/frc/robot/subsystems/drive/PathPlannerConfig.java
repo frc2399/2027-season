@@ -4,7 +4,7 @@ import static org.wpilib.units.Units.KilogramSquareMeters;
 import static org.wpilib.units.Units.Kilograms;
 
 import org.wpilib.math.geometry.Translation2d;
-import org.wpilib.math.system.plant.DCMotor;
+import org.wpilib.math.system.DCMotor;
 import org.wpilib.units.measure.Mass;
 import org.wpilib.units.measure.MomentOfInertia;
 
@@ -23,39 +23,6 @@ public final class PathPlannerConfig {
 
     static {
         switch (SubsystemFactory.getRobotType()) {
-            case BUBBLES:
-                ROBOT_MASS = Kilograms.of(0);
-                ROBOT_MOI = KilogramSquareMeters.of(6.883);
-                WHEEL_RADIUS = 0;
-                MAX_SPEED = 4.3;
-                WHEEL_COF = 0;
-                DRIVE_MOTOR = null;
-                DRIVE_CURRENT_LIMIT = 0;
-                NUM_MOTORS = 0;
-                MODULE_OFFSETS = new Translation2d();
-                break;
-            case MOZART:
-                ROBOT_MASS = Kilograms.of(0);
-                ROBOT_MOI = KilogramSquareMeters.of(0);
-                WHEEL_RADIUS = 0;
-                MAX_SPEED = 0;
-                WHEEL_COF = 0;
-                DRIVE_MOTOR = null;
-                DRIVE_CURRENT_LIMIT = 0;
-                NUM_MOTORS = 0;
-                MODULE_OFFSETS = new Translation2d();
-                break;
-            case BETA:
-                ROBOT_MASS = Kilograms.of(0);
-                ROBOT_MOI = KilogramSquareMeters.of(0);
-                WHEEL_RADIUS = 0;
-                MAX_SPEED = 0;
-                WHEEL_COF = 0;
-                DRIVE_MOTOR = null;
-                DRIVE_CURRENT_LIMIT = 0;
-                NUM_MOTORS = 0;
-                MODULE_OFFSETS = new Translation2d();
-                break;
             case COMP:
                 ROBOT_MASS = Kilograms.of(0);
                 ROBOT_MOI = KilogramSquareMeters.of(0);

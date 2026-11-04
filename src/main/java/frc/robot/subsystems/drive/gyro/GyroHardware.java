@@ -13,7 +13,7 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
-import robot.constants.RobotConstants;
+import frc.robot.constants.RobotConstants;
 
 import org.wpilib.units.measure.Angle;
 

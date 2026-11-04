@@ -56,7 +56,7 @@ public class RebuiltVisionUtil {
     }
 
     public static Pose2d getHubPose() {
-        if (FieldConstants.alliance.isPresent() && FieldConstants.alliance.get() == Alliance.Blue) {
+        if (FieldConstants.alliance.isPresent() && FieldConstants.alliance.get() == Alliance.BLUE) {
             return FieldConstants.BLUE_CENTER_OF_HUB_POSE;
         } else {
             return FieldConstants.RED_CENTER_OF_HUB_POSE;
@@ -64,7 +64,7 @@ public class RebuiltVisionUtil {
     }
 
     public static Pose2d getOutpostSidePose() {
-        if (FieldConstants.alliance.isPresent() && FieldConstants.alliance.get() == Alliance.Blue) {
+        if (FieldConstants.alliance.isPresent() && FieldConstants.alliance.get() == Alliance.BLUE) {
             return FieldConstants.HubConstants.AlignmentTargetPoseConstants.BLUE_OUTPOST_ALIGN_POSE;
         } else {
             return FieldConstants.HubConstants.AlignmentTargetPoseConstants.RED_OUTPOST_ALIGN_POSE;
@@ -72,7 +72,7 @@ public class RebuiltVisionUtil {
     }
 
     public static Pose2d getDepotSidePose() {
-        if (FieldConstants.alliance.isPresent() && FieldConstants.alliance.get() == Alliance.Blue) {
+        if (FieldConstants.alliance.isPresent() && FieldConstants.alliance.get() == Alliance.BLUE) {
             return FieldConstants.HubConstants.AlignmentTargetPoseConstants.BLUE_DEPOT_ALIGN_POSE;
         } else {
             return FieldConstants.HubConstants.AlignmentTargetPoseConstants.RED_DEPOT_ALIGN_POSE;
@@ -137,7 +137,7 @@ public class RebuiltVisionUtil {
                         .in(Meters);
 
         Transform2d toEdgeOfHubTransform =
-                new Transform2d(0, hubRadiusMinusFuelRadiusInMeters, Rotation2d.kZero);
+                new Transform2d(0, hubRadiusMinusFuelRadiusInMeters, Rotation2d.ZERO);
         Pose2d edgeOfHubPose = getHubPose().transformBy(toEdgeOfHubTransform);
 
         Translation2d edgeOfHubToShooterTranslation =

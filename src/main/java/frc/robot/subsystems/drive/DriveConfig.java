@@ -10,7 +10,7 @@ import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.LinearAcceleration;
 import org.wpilib.units.measure.LinearVelocity;
 
-import robot.SubsystemFactory;
+import frc.robot.SubsystemFactory;
 
 public final class DriveConfig {
     public static final double kS;

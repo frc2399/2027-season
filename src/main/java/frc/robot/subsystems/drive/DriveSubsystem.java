@@ -19,13 +19,13 @@ import com.pathplanner.lib.util.FlippingUtil;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
 import Robot;
-import robot.constants.FieldConstants;
-import robot.constants.RobotConstants;
-import robot.constants.RobotConstants.TransformConstants;
-import robot.subsystems.drive.gyro.Gyro;
-import robot.util.FieldCalculationHelpers;
-import robot.util.GameState;
-import robot.vision.VisionPoseEstimator.DriveBase;
+import frc.robot.constants.FieldConstants;
+import frc.robot.constants.RobotConstants;
+import frc.robot.constants.RobotConstants.TransformConstants;
+import frc.robot.subsystems.drive.gyro.Gyro;
+import frc.robot.util.FieldCalculationHelpers;
+import frc.robot.util.GameState;
+import frc.robot.vision.VisionPoseEstimator.DriveBase;
 
 import org.wpilib.math.Matrix;
 import org.wpilib.math.controller.PIDController;
@@ -45,19 +45,19 @@ import org.wpilib.math.util.Units;
 import org.wpilib.networktables.NetworkTableInstance;
 import org.wpilib.networktables.StructArrayPublisher;
 import org.wpilib.networktables.StructPublisher;
+import org.wpilib.smartdashboard.Field2d;
+import org.wpilib.smartdashboard.FieldObject2d;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.util.Alert;
-import org.wpilib.wpilibj2.Alert.AlertType;
-import org.wpilib.wpilibj.DriverStation;
-import org.wpilib.wpilibj.DriverStation.Alliance;
-import org.wpilib.wpilibj.Timer;
-import org.wpilib.wpilibj.smartdashboard.Field2d;
-import org.wpilib.wpilibj.smartdashboard.FieldObject2d;
+import org.wpilib.alert2.AlertType;
+import org.wpilib.driverstation.DriverStation;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.system.Timer;
 import org.wpilib.telemetry.Telemetry;
-import org.wpilib.wpilibj2.command.Command;
-import org.wpilib.wpilibj2.command.SubsystemBase;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -211,8 +211,8 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
                 new SwerveDriveKinematics(
                         FRONT_LEFT_OFFSET, FRONT_RIGHT_OFFSET, REAR_LEFT_OFFSET, REAR_RIGHT_OFFSET);
 
-        SmartDashboard.putData(field2d);
-        SmartDashboard.putData("drive/Drivetrain Commands", this);
+        Telemetry.log("field2d", field2d);
+        Telemetry.log("drive/Drivetrain Commands", this);
         poseEstimator =
                 new SwerveDrivePoseEstimator(
                         DRIVE_KINEMATICS,
@@ -245,7 +245,7 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
                     config, // The robot configuration
                     () -> {
                         if (FieldConstants.alliance.isPresent()) {
-                            return FieldConstants.alliance.get() == DriverStation.Alliance.Red;
+                            return FieldConstants.alliance.get() == DriverStation.Alliance.RED;
                         }
                         return false;
                     },
@@ -260,8 +260,8 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putBoolean("/drive/atGoal", atGoal);
-        SmartDashboard.putBoolean("/drive/isHubActive", GameState.isHubActive(0));
+        Telemetry.log("/drive/atGoal", atGoal);
+        Telemetry.log("/drive/isHubActive", GameState.isHubActive(0));
         // This will get the simulated sensor readings that we set
         // in the previous article while in simulation, but will use
         // real values on the robot itself.
@@ -278,20 +278,20 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
         robotPose = getPose();
         field2d.setRobotPose(robotPose);
 
-        SmartDashboard.putBoolean(
+        Telemetry.log(
                 "robot/should Target Hub",
                 FieldCalculationHelpers.shouldTargetHub(() -> robotPose));
-        SmartDashboard.putBoolean(
+        Telemetry.log(
                 "robot/am in Danger Zone", FieldCalculationHelpers.amInDangerZone(() -> robotPose));
-        SmartDashboard.putBoolean(
+        Telemetry.log(
                 "robot/isShootingAngleAlignedToHub wide tolerance",
                 RebuiltVisionUtil.isShootingAngleAlignedToHub(
                         () -> robotPose, RebuiltVisionUtil.ToleranceType.POSTALIGNMENT));
-        SmartDashboard.putBoolean(
+        Telemetry.log(
                 "robot/isShootingAngleAlignedToHub narrow tolerance",
                 RebuiltVisionUtil.isShootingAngleAlignedToHub(
                         () -> robotPose, RebuiltVisionUtil.ToleranceType.REALIGNING));
-        SmartDashboard.putString(
+        Telemetry.log(
                 "robot/where should robot pass",
                 FieldCalculationHelpers.getAlignmentTargetType(() -> robotPose).toString());
 
@@ -657,7 +657,7 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
         // advantagescope
         posePublisher.set(states.pose);
 
-        SmartDashboard.putBoolean("vision/orient/shouldAutoOrient", isAutoOrienting);
+        Telemetry.log("vision/orient/shouldAutoOrient", isAutoOrienting);
         Telemetry.log(
                 "shooter/distance to hub (in)",
                 RebuiltVisionUtil.getDistanceToAlignmentTarget(() -> robotPose).in(Inches));

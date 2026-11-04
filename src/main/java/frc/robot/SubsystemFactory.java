@@ -1,8 +1,9 @@
 package frc.robot;
 
+import org.wpilib.telemetry.Telemetry;
+
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.constants.RobotConstants;
 import frc.robot.constants.RobotConstants.MotorIdConstants;
 import frc.robot.subsystems.drive.DriveSubsystem;
@@ -46,8 +47,8 @@ public class SubsystemFactory {
                     "UNKNOWN SERIAL NUMBER (cannot identify robot based on rio) \nserial number of current rio: "
                             + serialNum);
         }
-        SmartDashboard.putString("robot/serialNum", serialNum);
-        SmartDashboard.putString("robot/robotType", robotType.name());
+        Telemetry.log("robot/serialNum", serialNum);
+       Telemetry.log("robot/robotType", robotType.name());
     }
 
     public static RobotType getRobotType() {

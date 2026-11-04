@@ -73,7 +73,7 @@ public class SwerveModule {
     public void setDesiredState(SwerveModuleVelocity newDesiredState) {
         // Apply chassis angular offset to the desired state.
         SwerveModuleVelocity correctedDesiredState = new SwerveModuleVelocity();
-        correctedDesiredState.speedMetersPerSecond = newDesiredState.speedMetersPerSecond;
+        correctedDesiredState.velocity = newDesiredState.velocity;
         correctedDesiredState.angle =
                 newDesiredState.angle.plus(Rotation2d.fromRadians(io.getChassisAngularOffset()));
 
@@ -81,7 +81,7 @@ public class SwerveModule {
 
         correctedDesiredState.optimize(new Rotation2d(getTurnEncoderPosition()));
         io.setDesiredDriveSpeedMPS(
-                correctedDesiredState.speedMetersPerSecond,
+                correctedDesiredState.velocity,
                 correctedDesiredState.angle != newDesiredState.angle);
         io.setDesiredTurnAngle(correctedDesiredState.angle.getRadians());
         desiredState = newDesiredState;
