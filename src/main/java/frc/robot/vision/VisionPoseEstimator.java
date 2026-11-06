@@ -1,25 +1,25 @@
 package frc.robot.vision;
 
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static org.wpilib.units.Units.Meters;
+import static org.wpilib.units.Units.MetersPerSecond;
+import static org.wpilib.units.Units.Radians;
+import static org.wpilib.units.Units.RotationsPerSecond;
 
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.wpilib.math.linalg.Matrix;
+import org.wpilib.math.linalg.VecBuilder;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Rotation3d;
+import org.wpilib.math.geometry.Transform3d;
+import org.wpilib.math.numbers.N1;
+import org.wpilib.math.numbers.N3;
+import org.wpilib.networktables.NetworkTableInstance;
+import org.wpilib.networktables.StructPublisher;
+import org.wpilib.telemetry.Telemetry;
+import org.wpilib.units.measure.Angle;
+import org.wpilib.units.measure.AngularVelocity;
+import org.wpilib.units.measure.Distance;
+import org.wpilib.units.measure.LinearVelocity;
 import frc.robot.SubsystemFactory.RobotType;
 import frc.robot.subsystems.drive.DriveConfig;
 import java.util.Optional;
@@ -51,7 +51,7 @@ public final class VisionPoseEstimator {
         double getLinearSpeed();
 
         /**
-         * Passthrough to {@link edu.wpi.first.math.estimator.SwerveDrivePoseEstimator}
+         * Passthrough to {@link org.wpilib..math.estimator.SwerveDrivePoseEstimator}
          * addVisionMeasurement
          *
          * @param pose
@@ -189,7 +189,7 @@ public final class VisionPoseEstimator {
             }
 
             String tagIDString = tagIDs.length() > 0 ? tagIDs.toString() : "None";
-            SmartDashboard.putString("vision/poseTagIDs", tagIDString);
+            Telemetry.log("vision/poseTagIDs", tagIDString);
         }
 
         // Reject poses where we can see no tags or are at the "uh oh something went
@@ -243,6 +243,6 @@ public final class VisionPoseEstimator {
                                     VecBuilder.fill(
                                             stddevs[6], stddevs[7], Double.POSITIVE_INFINITY));
                         });
-        SmartDashboard.putBoolean("vision/is using vision data", isUsingVisionData);
+        Telemetry.log("vision/is using vision data", isUsingVisionData);
     }
 }

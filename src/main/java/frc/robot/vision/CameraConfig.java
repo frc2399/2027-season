@@ -1,10 +1,10 @@
 package frc.robot.vision;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Inches;
+import static org.wpilib.units.Units.Degrees;
+import static org.wpilib.units.Units.Inches;
 
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Distance;
+import org.wpilib.units.measure.Angle;
+import org.wpilib.units.measure.Distance;
 import frc.robot.SubsystemFactory;
 
 public class CameraConfig {
@@ -26,51 +26,6 @@ public class CameraConfig {
 
     static {
         switch (SubsystemFactory.getRobotType()) {
-            case MOZART:
-                LIMELIGHT_NAME = "";
-                CAMERA_PITCH = Degrees.of(15);
-                CAMERA_YAW = Degrees.of(153);
-                X_ROBOT_TO_CAMERA_OFFSET = Inches.of(9.75);
-                Y_ROBOT_TO_CAMERA_OFFSET = Inches.of(9.25);
-                Z_ROBOT_TO_CAMERA_OFFSET = Inches.of(10);
-                HAS_SECOND_CAMERA = false;
-                SECOND_LIMELIGHT_NAME = "not_a_limelight";
-                SECOND_CAMERA_PITCH = Degrees.of(0);
-                SECOND_CAMERA_YAW = Degrees.of(0);
-                SECOND_X_ROBOT_TO_CAMERA_OFFSET = Inches.of(0);
-                SECOND_Y_ROBOT_TO_CAMERA_OFFSET = Inches.of(0);
-                SECOND_Z_ROBOT_TO_CAMERA_OFFSET = Inches.of(0);
-                break;
-            case BUBBLES:
-                LIMELIGHT_NAME = "";
-                CAMERA_PITCH = Degrees.of(25);
-                CAMERA_YAW = Degrees.of(0);
-                X_ROBOT_TO_CAMERA_OFFSET = Inches.of(11.29);
-                Y_ROBOT_TO_CAMERA_OFFSET = Inches.of(0);
-                Z_ROBOT_TO_CAMERA_OFFSET = Inches.of(6.91);
-                HAS_SECOND_CAMERA = false;
-                SECOND_LIMELIGHT_NAME = "not_a_limelight";
-                SECOND_CAMERA_PITCH = Degrees.of(0);
-                SECOND_CAMERA_YAW = Degrees.of(0);
-                SECOND_X_ROBOT_TO_CAMERA_OFFSET = Inches.of(0);
-                SECOND_Y_ROBOT_TO_CAMERA_OFFSET = Inches.of(0);
-                SECOND_Z_ROBOT_TO_CAMERA_OFFSET = Inches.of(0);
-                break;
-            case BETA:
-                LIMELIGHT_NAME = "";
-                CAMERA_PITCH = Degrees.of(23.5);
-                CAMERA_YAW = Degrees.of(10);
-                X_ROBOT_TO_CAMERA_OFFSET = Inches.of(12.5);
-                Y_ROBOT_TO_CAMERA_OFFSET = Inches.of(-9.75);
-                Z_ROBOT_TO_CAMERA_OFFSET = Inches.of(28.75);
-                HAS_SECOND_CAMERA = false;
-                SECOND_LIMELIGHT_NAME = "not_a_limelight";
-                SECOND_CAMERA_PITCH = Degrees.of(0);
-                SECOND_CAMERA_YAW = Degrees.of(0);
-                SECOND_X_ROBOT_TO_CAMERA_OFFSET = Inches.of(0);
-                SECOND_Y_ROBOT_TO_CAMERA_OFFSET = Inches.of(0);
-                SECOND_Z_ROBOT_TO_CAMERA_OFFSET = Inches.of(0);
-                break;
             case COMP:
                 LIMELIGHT_NAME = "";
                 CAMERA_PITCH = Degrees.of(32.794);

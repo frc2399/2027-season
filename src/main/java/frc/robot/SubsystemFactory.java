@@ -2,9 +2,7 @@ package frc.robot;
 
 import org.wpilib.telemetry.Telemetry;
 
-import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.RobotBase;
-import frc.robot.constants.RobotConstants;
+import org.wpilib.framework.RobotBase;
 import frc.robot.constants.RobotConstants.MotorIdConstants;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.SwerveModule;
@@ -23,7 +21,6 @@ public class SubsystemFactory {
     private static final double REAR_RIGHT_CHASSIS_ANGULAR_OFFSET = Math.PI / 2;
 
     
-    private static final String COMP_SERIAL_NUMBER = "03260A64";
 
     public enum RobotType {
         SIM,
@@ -34,14 +31,11 @@ public class SubsystemFactory {
 
     private String serialNum = System.getenv("serialnum");
 
-    // for csv solution for shooter
-    private String csvFilepath = "";
 
     public SubsystemFactory() {
         if (RobotBase.isSimulation()) {
             robotType = RobotType.SIM;
             serialNum = "simulation";
-            csvFilepath = Filesystem.getDeployDirectory() + "/beta-shooter-speeds.csv";
         } else {
             throw new RuntimeException(
                     "UNKNOWN SERIAL NUMBER (cannot identify robot based on rio) \nserial number of current rio: "

@@ -1,7 +1,6 @@
 package frc.robot.subsystems.drive;
 
 import org.wpilib.math.system.DCMotor;
-import org.wpilib.math.system.LinearSystem;
 import org.wpilib.math.system.Models;
 import org.wpilib.math.util.MathUtil;
 import org.wpilib.math.util.Units;
@@ -65,19 +64,19 @@ public class SwerveModuleSim implements SwerveModuleIO {
         // NEO Vortex motor with gear reduction and moment of inertia
         DCMotor driveGearbox = DCMotor.getNeoVortex(1);
         driveSim =
-                // new DCMotorSim(
-                //         LinearSystemId.createDCMotorSystem(
-                //                 driveGearbox, DRIVE_MOI, DRIVING_MOTOR_REDUCTION),
-                //         driveGearbox);
+                new DCMotorSim(
+                     Models.singleJointedArmFromPhysicalConstants(
+                                driveGearbox, DRIVE_MOI, DRIVING_MOTOR_REDUCTION),
+                        driveGearbox);
 
         // Create turn motor simulation
         // NEO 550 motor with gear reduction and moment of inertia
-        // DCMotor turnGearbox = DCMotor.getNeo550(1);
-        // turnSim =
-        //         new DCMotorSim(
-        //                 Models.singleJointedArmFromPhysicalConstants(
-        //                         turnGearbox, TURN_MOI, TURNING_MOTOR_REDUCTION),
-        //                 turnGearbox);
+        DCMotor turnGearbox = DCMotor.getNeo550(1);
+        turnSim =
+                new DCMotorSim(
+                        Models.singleJointedArmFromPhysicalConstants(
+                                turnGearbox, TURN_MOI, TURNING_MOTOR_REDUCTION),
+                        turnGearbox);
 
         // Set initial turn position to account for chassis angular offset
         // Add some randomness to simulate real encoder positions

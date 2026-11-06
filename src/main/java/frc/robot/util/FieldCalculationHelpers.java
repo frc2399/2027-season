@@ -3,7 +3,6 @@ package frc.robot.util;
 import static org.wpilib.units.Units.Meters;
 
 import org.wpilib.math.geometry.Pose2d;
-import org.wpilib.driverstation.DriverStation
 import org.wpilib.driverstation.Alliance;
 import frc.robot.CommandFactory.TargetZoneType;
 import frc.robot.constants.FieldConstants;
@@ -13,10 +12,10 @@ public class FieldCalculationHelpers {
     public static Boolean shouldTargetHub(Supplier<Pose2d> robotLocation) {
         double poseX = robotLocation.get().getX();
         if (FieldConstants.alliance.isPresent()) {
-            if (FieldConstants.alliance.get() == DriverStation.Alliance.Blue) {
+            if (FieldConstants.alliance.get() == Alliance.BLUE) {
                 return (FieldConstants.FieldBoundaries.BLUE_ZONE_BOUNDARY_X.in(Meters) >= poseX);
             }
-            if (FieldConstants.alliance.get() == DriverStation.Alliance.Red) {
+            if (FieldConstants.alliance.get() == Alliance.RED) {
                 return (FieldConstants.FieldBoundaries.RED_ZONE_BOUNDARY_X.in(Meters) <= poseX);
             }
         }
@@ -38,7 +37,7 @@ public class FieldCalculationHelpers {
             return TargetZoneType.HUB;
         }
         if (FieldConstants.alliance.isPresent()
-                && FieldConstants.alliance.get() == DriverStation.Alliance.Blue) {
+                && FieldConstants.alliance.get() == Alliance.BLUE) {
             if (FieldConstants.FieldBoundaries.HORIZONTAL_CENTER_LINE.in(Meters) <= poseY) {
 
                 return TargetZoneType.DEPOT_SIDE;

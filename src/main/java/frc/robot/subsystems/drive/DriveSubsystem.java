@@ -18,16 +18,13 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.util.FlippingUtil;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
-import Robot;
+import frc.robot.Robot;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
-import frc.robot.constants.RobotConstants.TransformConstants;
 import frc.robot.subsystems.drive.gyro.Gyro;
-import frc.robot.util.FieldCalculationHelpers;
-import frc.robot.util.GameState;
 import frc.robot.vision.VisionPoseEstimator.DriveBase;
 
-import org.wpilib.math.Matrix;
+import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
 import org.wpilib.math.filter.Debouncer;
@@ -51,8 +48,7 @@ import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.util.Alert;
-import org.wpilib.alert2.AlertType;
-import org.wpilib.driverstation.DriverStation;
+import org.wpilib.driverstation.DriverStationErrors;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.system.Timer;
 import org.wpilib.telemetry.Telemetry;
@@ -66,7 +62,6 @@ import java.util.function.Supplier;
 public class DriveSubsystem extends SubsystemBase implements DriveBase {
     // for drivetopose
     private boolean atGoal = true;
-    private BooleanSupplier isBlueAlliance;
     private boolean isAutoOrienting = false;
 
     private DriveSubsystemStates states = new DriveSubsystemStates();
@@ -119,7 +114,7 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
     private double desiredAngle = 0;
     private Gyro gyro;
 
-    Alert alert = new Alert("Fault detected on pigeon", AlertType.kError);
+    Alert alert = new Alert("pigeon fault", "Fault detected on pigeon", Alert.Level.HIGH);
 
     private final Field2d field2d = new Field2d();
     private FieldObject2d frontLeftField2dModule = field2d.getObject("front left module");
@@ -245,13 +240,13 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
                     config, // The robot configuration
                     () -> {
                         if (FieldConstants.alliance.isPresent()) {
-                            return FieldConstants.alliance.get() == DriverStation.Alliance.RED;
+                            return FieldConstants.alliance.get() == Alliance.RED;
                         }
                         return false;
                     },
                     this);
         } catch (Exception e) {
-            DriverStation.reportError(
+            DriverStationErrors.reportError(
                     "Failed to load Pathplanner config and configure Autobuilder",
                     e.getStackTrace());
         }
@@ -261,12 +256,11 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
     @Override
     public void periodic() {
         Telemetry.log("/drive/atGoal", atGoal);
-        Telemetry.log("/drive/isHubActive", GameState.isHubActive(0));
         // This will get the simulated sensor readings that we set
         // in the previous article while in simulation, but will use
         // real values on the robot itself.
         poseEstimator.updateWithTime(
-                Timer.getFPGATimestamp(),
+                Timer.getTimestamp(),
                 Rotation2d.fromRadians(gyro.getYaw(true).in(Radians)),
                 new SwerveModulePosition[] {
                     frontLeft.getPosition(),
@@ -277,23 +271,6 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
 
         robotPose = getPose();
         field2d.setRobotPose(robotPose);
-
-        Telemetry.log(
-                "robot/should Target Hub",
-                FieldCalculationHelpers.shouldTargetHub(() -> robotPose));
-        Telemetry.log(
-                "robot/am in Danger Zone", FieldCalculationHelpers.amInDangerZone(() -> robotPose));
-        Telemetry.log(
-                "robot/isShootingAngleAlignedToHub wide tolerance",
-                RebuiltVisionUtil.isShootingAngleAlignedToHub(
-                        () -> robotPose, RebuiltVisionUtil.ToleranceType.POSTALIGNMENT));
-        Telemetry.log(
-                "robot/isShootingAngleAlignedToHub narrow tolerance",
-                RebuiltVisionUtil.isShootingAngleAlignedToHub(
-                        () -> robotPose, RebuiltVisionUtil.ToleranceType.REALIGNING));
-        Telemetry.log(
-                "robot/where should robot pass",
-                FieldCalculationHelpers.getAlignmentTargetType(() -> robotPose).toString());
 
         frontLeftField2dModule.setPose(
                 robotPose.transformBy(
@@ -319,21 +296,21 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
                                 REAR_RIGHT_OFFSET,
                                 new Rotation2d(rearRight.getTurnEncoderPosition()))));
 
-        SwerveModuleVelocity[] SwerveModuleVelocitys =
+        SwerveModuleVelocity[] SwerveModuleVelocities =
                 new SwerveModuleVelocity[] {
                     frontLeft.getState(),
                     frontRight.getState(),
                     rearLeft.getState(),
                     rearRight.getState(),
                 };
-        SwerveModuleVelocityPublisher.set(SwerveModuleVelocitys);
+        SwerveModuleVelocityPublisher.set(SwerveModuleVelocities);
 
         if (Robot.isSimulation()) {
             double angleChange =
-                    DRIVE_KINEMATICS.toChassisVelocities(SwerveModuleVelocitys).omegaRadiansPerSecond
+                    DRIVE_KINEMATICS.toChassisVelocities(SwerveModuleVelocities).omega
                             * (1 / RobotConstants.SpeedConstants.MAIN_LOOP_FREQUENCY_HZ);
             lastAngle = lastAngle.plus(Rotation2d.fromRadians(angleChange));
-            gyro.setYawCommand(Radians.of(lastAngle.getRadians()));
+            gyro.setYaw(Radians.of(lastAngle.getRadians()));
         }
 
         logAndUpdateDriveSubsystemStates();
@@ -393,7 +370,7 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
                             double currentAngle = gyro.getYaw(false).in(Radians);
                             if (FieldConstants.alliance.isPresent()
                                     && FieldConstants.alliance.get()
-                                            == DriverStation.Alliance.Red) {
+                                            == Alliance.RED) {
                                 currentAngle += Math.PI;
                             }
 
@@ -429,11 +406,8 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
 
                             if (fieldRelative) {
                                 relativeRobotSpeeds =
-                                        ChassisVelocities.fromFieldRelativeSpeeds(
-                                                xSpeedDelivered,
-                                                ySpeedDelivered,
-                                                rotRateDelivered,
-                                                Rotation2d.fromRadians(currentAngle));
+                                       new ChassisVelocities(xSpeedDelivered, ySpeedDelivered, rotRateDelivered)
+                                                .toRobotRelative(Rotation2d.fromRadians(currentAngle));
                             } else {
                                 relativeRobotSpeeds =
                                         new ChassisVelocities(
@@ -444,16 +418,16 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
                             Telemetry.log("drive/ySpeedDelivered", ySpeedDelivered);
                             Telemetry.log("drive/PolarAngle", polarAngle);
 
-                            var SwerveModuleVelocitys =
-                                    DRIVE_KINEMATICS.toSwerveModuleVelocitys(relativeRobotSpeeds);
-                            SwerveDriveKinematics.desaturateWheelSpeeds(
-                                    SwerveModuleVelocitys, MAX_LINEAR_SPEED.in(MetersPerSecond));
-                            frontLeft.setDesiredState(SwerveModuleVelocitys[0]);
-                            frontRight.setDesiredState(SwerveModuleVelocitys[1]);
-                            rearLeft.setDesiredState(SwerveModuleVelocitys[2]);
-                            rearRight.setDesiredState(SwerveModuleVelocitys[3]);
+                            var swerveModuleVelocities =
+                                    DRIVE_KINEMATICS.toSwerveModuleVelocities(relativeRobotSpeeds);
+                            swerveModuleVelocities = SwerveDriveKinematics.desaturateWheelVelocities(
+                                    swerveModuleVelocities, MAX_LINEAR_SPEED.in(MetersPerSecond));
+                            frontLeft.setDesiredState(swerveModuleVelocities[0]);
+                            frontRight.setDesiredState(swerveModuleVelocities[1]);
+                            rearLeft.setDesiredState(swerveModuleVelocities[2]);
+                            rearRight.setDesiredState(swerveModuleVelocities[3]);
 
-                            swerveModuleDesiredStatePublisher.set(SwerveModuleVelocitys);
+                            swerveModuleDesiredStatePublisher.set(swerveModuleVelocities);
                         })
                 .withName("drive command");
     }
@@ -479,15 +453,15 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
     }
 
     public void setRobotRelativeSpeeds(ChassisVelocities speeds) {
-        speeds = ChassisVelocities.discretize(speeds, .02);
-        var SwerveModuleVelocitys = DRIVE_KINEMATICS.toSwerveModuleVelocitys(speeds);
-        SwerveDriveKinematics.desaturateWheelSpeeds(
-                SwerveModuleVelocitys, MAX_LINEAR_SPEED.in(MetersPerSecond));
-        frontLeft.setDesiredState(SwerveModuleVelocitys[0]);
-        frontRight.setDesiredState(SwerveModuleVelocitys[1]);
-        rearLeft.setDesiredState(SwerveModuleVelocitys[2]);
-        rearRight.setDesiredState(SwerveModuleVelocitys[3]);
-        swerveModuleDesiredStatePublisher.set(SwerveModuleVelocitys);
+        speeds = speeds.discretize(.02);
+        var SwerveModuleVelocities = DRIVE_KINEMATICS.toSwerveModuleVelocities(speeds);
+        SwerveModuleVelocities = SwerveDriveKinematics.desaturateWheelVelocities(
+                SwerveModuleVelocities, MAX_LINEAR_SPEED.in(MetersPerSecond));
+        frontLeft.setDesiredState(SwerveModuleVelocities[0]);
+        frontRight.setDesiredState(SwerveModuleVelocities[1]);
+        rearLeft.setDesiredState(SwerveModuleVelocities[2]);
+        rearRight.setDesiredState(SwerveModuleVelocities[3]);
+        swerveModuleDesiredStatePublisher.set(SwerveModuleVelocities);
     }
 
     private void configurePathPlannerLogging() {
@@ -513,14 +487,7 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
             double polarXSpeed,
             double polarYSpeed,
             BooleanSupplier shouldAutoAlign) {
-        if (shouldAutoAlign.getAsBoolean()) {
-            return AutoAlignUtil.getAutoOrientRotRate(
-                    () -> robotPose,
-                    RebuiltVisionUtil.getAlignmentTargetPose(() -> robotPose),
-                    TransformConstants.ROBOT_TO_SHOOTER_TRANSFORM);
-        } else {
             return getHeadingCorrectionRotRate(currentAngle, rotRate, polarXSpeed, polarYSpeed);
-        }
     }
 
     private double getHeadingCorrectionRotRate(
@@ -552,8 +519,8 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
 
     @Override
     public double getLinearSpeed() {
-        double velocityXMPS = getRobotRelativeSpeeds().vxMetersPerSecond;
-        double velocityYMPS = getRobotRelativeSpeeds().vyMetersPerSecond;
+        double velocityXMPS = getRobotRelativeSpeeds().vx;
+        double velocityYMPS = getRobotRelativeSpeeds().vy;
         return Math.hypot(velocityXMPS, velocityYMPS);
     }
 
@@ -602,7 +569,7 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
                             Supplier<Pose2d> goalPose = wantPose;
 
                             if (FieldConstants.alliance.isPresent()
-                                    && FieldConstants.alliance.get() == Alliance.Red) {
+                                    && FieldConstants.alliance.get() == Alliance.RED) {
                                 goalPose = () -> FlippingUtil.flipFieldPose(wantPose.get());
                             }
 
@@ -620,13 +587,12 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
 
                             // tolerances were accounted for in getDriveToPoseVelocities
                             atGoal =
-                                    alignmentSpeeds.vxMetersPerSecond == 0
-                                            && alignmentSpeeds.vyMetersPerSecond == 0
-                                            && alignmentSpeeds.omegaRadiansPerSecond == 0;
+                                    alignmentSpeeds.vx == 0
+                                            && alignmentSpeeds.vy == 0
+                                            && alignmentSpeeds.omega == 0;
 
                             ChassisVelocities finalAlignmentSpeeds =
-                                    ChassisVelocities.fromFieldRelativeSpeeds(
-                                            alignmentSpeeds, robotPose.getRotation());
+                                            alignmentSpeeds.toRobotRelative(robotPose.getRotation());
 
                             setRobotRelativeSpeeds(finalAlignmentSpeeds);
                         })
@@ -647,10 +613,10 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
     private void logAndUpdateDriveSubsystemStates() {
         states.pose = getPose();
         states.poseTheta = states.pose.getRotation().getDegrees();
-        states.velocityXMPS = getRobotRelativeSpeeds().vxMetersPerSecond;
-        states.velocityYMPS = getRobotRelativeSpeeds().vyMetersPerSecond;
+        states.velocityXMPS = getRobotRelativeSpeeds().vx;
+        states.velocityYMPS = getRobotRelativeSpeeds().vy;
         states.totalVelocity = Math.hypot(states.velocityXMPS, states.velocityYMPS);
-        states.angularVelocity = Units.radiansToDegrees(relativeRobotSpeeds.omegaRadiansPerSecond);
+        states.angularVelocity = Units.radiansToDegrees(relativeRobotSpeeds.omega);
         states.gyroAngleDegrees = gyro.getYaw(false).in(Degrees);
 
         // Publish the pose in a struct that can be laid onto the "odometry" view in
@@ -658,9 +624,6 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
         posePublisher.set(states.pose);
 
         Telemetry.log("vision/orient/shouldAutoOrient", isAutoOrienting);
-        Telemetry.log(
-                "shooter/distance to hub (in)",
-                RebuiltVisionUtil.getDistanceToAlignmentTarget(() -> robotPose).in(Inches));
         Telemetry.log("drive/Pose X(m)", states.pose.getX());
         Telemetry.log("drive/Pose Y(m)", states.pose.getY());
         Telemetry.log("drive/Pose Theta(deg)", states.poseTheta);
