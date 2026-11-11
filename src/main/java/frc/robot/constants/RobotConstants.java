@@ -31,7 +31,6 @@ public final class RobotConstants {
         public static final int SHOOTER_INDEXER_CAN_ID = 1;
         public static final int GYRO_CAN_ID = 3;
         public static final int SHOOTER_BOTTOM_CAN_ID = 3;
-        public static final int SHOOTER_TOP_CAN_ID = 21;
 
         public static final int INTAKE_ROLLER_BETA_AND_COMP_FOLLOWER_CAN_ID = 6;
         public static final int INTAKE_ROLLER_BETA_AND_COMP_LEADER_CAN_ID = 7;

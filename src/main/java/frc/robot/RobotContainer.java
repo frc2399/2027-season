@@ -2,9 +2,9 @@ package frc.robot;
 
 import static org.wpilib.units.Units.Degrees;
 
-import org.wpilib.command2.Command;
-import org.wpilib.command2.button.CommandXboxController;
+import org.wpilib.command2.button.CommandGamepad;
 import org.wpilib.math.util.MathUtil;
+
 import frc.robot.constants.RobotConstants.DriveControlConstants;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.gyro.Gyro;
@@ -23,13 +23,9 @@ public class RobotContainer {
                     gyro
                     );
 
-    private static final CommandXboxController driverController =
-            new CommandXboxController(DriveControlConstants.DRIVER_CONTROLLER_PORT);
+    private static final CommandGamepad driverController =
+            new CommandGamepad(DriveControlConstants.DRIVER_CONTROLLER_PORT);
 
-
-    private boolean isGyroConfigured = false;
-    private boolean autonHasNoGyroAngle = false;
-    private String autonGyroConfiguredFor = "";
 
     public RobotContainer() {
         configureDefaultCommands();
@@ -44,10 +40,6 @@ public class RobotContainer {
         if (!Robot.isSimulation()) {
             return;
         }
-    }
-
-    public Command disableSubsystems() {
-        return drive.disableDriveToPose();
     }
 
     public void configureDefaultCommands() {
@@ -75,10 +67,12 @@ public class RobotContainer {
 
         // note! do not bind to the left bumper button; it is used in drive command for
         // auto-orient!
-        driverController.b().onTrue(commandFactory.resetHeading(Degrees.of(0)));
+        // faceRight = B on Xbox
+        driverController.faceRight().onTrue(commandFactory.resetHeading(Degrees.of(0)));
         // manual shooting is a backup so we can still score if there's an issue
         // with the limelight or robot pose.
-        driverController.x().whileTrue(drive.setX());
+        // faceLeft = X on Xbox
+        driverController.faceLeft().whileTrue(drive.setX());
     }
 
 

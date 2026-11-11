@@ -33,270 +33,247 @@ import frc.robot.constants.RobotConstants.MotorConstants;
 
 public class SwerveModuleHardwareVortex implements SwerveModuleIO {
 
-    private SparkFlex drivingSparkFlex;
-    private SparkMax turningSparkMax;
+        private SparkFlex drivingSparkFlex;
+        private SparkMax turningSparkMax;
 
-    private final RelativeEncoder drivingRelativeEncoder;
-    private final SparkAbsoluteEncoder turningAbsoluteEncoder;
+        private final RelativeEncoder drivingRelativeEncoder;
+        private final SparkAbsoluteEncoder turningAbsoluteEncoder;
 
-    private final SparkClosedLoopController drivingPidController;
-    private final SparkClosedLoopController turningPidController;
+        private final SparkClosedLoopController drivingPidController;
+        private final SparkClosedLoopController turningPidController;
 
-    private double chassisAngularOffset;
-    private String name;
-    private double desiredAngle;
-    private double driveDesiredVelocity;
-    private static final SparkFlexConfig sparkFlexConfigDriving = new SparkFlexConfig();
-    private static final ClosedLoopConfig sparkFlexClosedLoopConfigDriving = new ClosedLoopConfig();
-    private static final SparkMaxConfig sparkMaxConfigTurning = new SparkMaxConfig();
-    private static final ClosedLoopConfig sparkMaxClosedLoopConfigTurning = new ClosedLoopConfig();
+        private double chassisAngularOffset;
+        private String name;
+        private double desiredAngle;
+        private double driveDesiredVelocity;
+        private static final SparkFlexConfig sparkFlexConfigDriving = new SparkFlexConfig();
+        private static final ClosedLoopConfig sparkFlexClosedLoopConfigDriving = new ClosedLoopConfig();
+        private static final SparkMaxConfig sparkMaxConfigTurning = new SparkMaxConfig();
+        private static final ClosedLoopConfig sparkMaxClosedLoopConfigTurning = new ClosedLoopConfig();
 
-    private boolean isOptimizedBackwards = false;
+        private boolean isOptimizedBackwards = false;
 
-    // drivings are NEO Vortex, turnings are NEO 550s
-    private static int DRIVING_MOTOR_PINION_TEETH;
+        // drivings are NEO Vortex, turnings are NEO 550s
+        private static int DRIVING_MOTOR_PINION_TEETH;
 
-    // Invert the turning encoder, since the output shaft rotates in the opposite
-    // direction of the steering motor in the MAXSwerve Module.
-    private static final boolean TURNING_ENCODER_INVERTED = true;
-    private static final boolean DRIVING_MOTOR_INVERTED = false;
-    private static final boolean TURNING_MOTOR_INVERTED = false;
+        // Invert the turning encoder, since the output shaft rotates in the opposite
+        // direction of the steering motor in the MAXSwerve Module.
+        private static final boolean TURNING_ENCODER_INVERTED = true;
+        private static final boolean DRIVING_MOTOR_INVERTED = false;
+        private static final boolean TURNING_MOTOR_INVERTED = false;
 
-    // Calculations required for driving motor conversion factors and feed forward
-    private static final Distance WHEEL_DIAMETER = Inches.of(1.5 * 2);
-
-    // 45 teeth on the wheel's bevel gear, 22 teeth on the first-stage spur gear, 15
-    // teeth on the bevel pinion
-    // This is also the gear ratio (14T)
-
-    private final double DRIVING_MOTOR_REDUCTION;
-
-
-
-    private final Distance DRIVING_ENCODER_POSITION_FACTOR; // meters
-    private final Distance DRIVING_ENCODER_VELOCITY_FACTOR; // meters
-    // per
-    // second
-
-    private static final double TURNING_ENCODER_POSITION_FACTOR = Units.rotationsToRadians(1);
-
-    private static final boolean TURNING_ENCODER_POSITION_WRAPPING = true;
-    private static final double TURNING_ENCODER_POSITION_PID_MIN_INPUT = 0; // radians
-    private static final double TURNING_ENCODER_POSITION_PID_MAX_INPUT =
-            TURNING_ENCODER_POSITION_FACTOR; // radians
-
-    private final double DRIVING_P;
-    private final double DRIVING_I = 0;
-    private final double DRIVING_D;
-    private final double DRIVING_KS;
-    private final double DRIVING_KV;
-    private static final double DRIVING_MIN_OUTPUT = -1;
-
-    private static final double DRIVING_MAX_OUTPUT = 1;
-
-    private final double TURNING_P;
-    private static final double TURNING_I = 0;
-    private static double TURNING_D;
-    private static final double DRIVING_KA = 0;
-    private static final double TURNING_MIN_OUTPUT = -1;
-    private static final double TURNING_MAX_OUTPUT = 1;
-    private static final double TURNING_KS = 0;
-    private static final double TURNING_KV = 0;
-    private static final double TURNING_KA = 0;
-    private static final double VOLTAGE_COMPENSATION = 12;
-
-    private static final SparkBaseConfig.IdleMode DRIVING_MOTOR_IDLE_MODE =
-            SparkBaseConfig.IdleMode.kBrake;
-    private static final SparkBaseConfig.IdleMode TURNING_MOTOR_IDLE_MODE =
-            SparkBaseConfig.IdleMode.kBrake;
-
-    public SwerveModuleHardwareVortex(
-            int drivingCanId, int turningCanId, double chassisAngularOffset, String name) {
-        CANPort drivingCanPort = com.revrobotics.util.CANPorts.fromBusId(drivingCanId);
-        CANPort turningCanPort = com.revrobotics.util.CANPorts.fromBusId(turningCanId);
-        
-        this.chassisAngularOffset = chassisAngularOffset;
-        this.name = name;
-        drivingSparkFlex = new SparkFlex(drivingCanPort, drivingCanId, MotorType.kBrushless);
-        turningSparkMax = new SparkMax(turningCanPort, turningCanId, MotorType.kBrushless);
-                
-
-        // get from config!
-        DRIVING_KS = DriveConfig.kS;
-        DRIVING_KV = DriveConfig.kV;
-        DRIVING_P = DriveConfig.DRIVE_P;
-        DRIVING_D = DriveConfig.DRIVE_D;
-        TURNING_P = DriveConfig.TURN_P;
-        TURNING_D = DriveConfig.TURN_D;
-        DRIVING_MOTOR_PINION_TEETH = DriveConfig.PINION_TEETH;
-
-        Telemetry.log("drive/config/ks", DRIVING_KS);
-        Telemetry.log("drive/config/kv", DRIVING_KV);
-        Telemetry.log("drive/config/swervedrivep", DRIVING_P);
-        Telemetry.log("drive/config/swervedrived", DRIVING_D);
-        Telemetry.log("drive/config/turnp", TURNING_P);
-        Telemetry.log("drive/config/turnd", TURNING_D);
-        Telemetry.log("drive/config/pinion", DRIVING_MOTOR_PINION_TEETH);
+        // Calculations required for driving motor conversion factors and feed forward
+        private static final Distance WHEEL_DIAMETER = Inches.of(1.5 * 2);
 
         // 45 teeth on the wheel's bevel gear, 22 teeth on the first-stage spur gear, 15
         // teeth on the bevel pinion
         // This is also the gear ratio (14T)
-        // a lot of this had to get moved down here because pinion teeth is variable by
-        // robot & assigned via module config
-        DRIVING_MOTOR_REDUCTION = (45.0 * 22) / (DRIVING_MOTOR_PINION_TEETH * 15);
-        
 
-        DRIVING_ENCODER_POSITION_FACTOR =
-                (WHEEL_DIAMETER.times(Math.PI)).div(DRIVING_MOTOR_REDUCTION); // meters
-        DRIVING_ENCODER_VELOCITY_FACTOR = DRIVING_ENCODER_POSITION_FACTOR.div(60); // meters
+        private final double DRIVING_MOTOR_REDUCTION;
+
+        private final Distance DRIVING_ENCODER_POSITION_FACTOR; // meters
+        private final Distance DRIVING_ENCODER_VELOCITY_FACTOR; // meters
         // per
         // second
 
-        sparkFlexConfigDriving
-                .inverted(DRIVING_MOTOR_INVERTED)
-                .idleMode(DRIVING_MOTOR_IDLE_MODE)
-                .smartCurrentLimit((int) MotorConstants.VORTEX_CURRENT_LIMIT.in(Amps))
-                .voltageCompensation(VOLTAGE_COMPENSATION);
-        sparkFlexConfigDriving
-                .closedLoop
-                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .outputRange(DRIVING_MIN_OUTPUT, DRIVING_MAX_OUTPUT);
+        private static final double TURNING_ENCODER_POSITION_FACTOR = Units.rotationsToRadians(1);
 
-        sparkFlexClosedLoopConfigDriving
-                .pid(DRIVING_P, DRIVING_I, DRIVING_D)
-                .feedForward
-                .sva(DRIVING_KS, DRIVING_KV, DRIVING_KA);
+        private static final boolean TURNING_ENCODER_POSITION_WRAPPING = true;
+        private static final double TURNING_ENCODER_POSITION_PID_MIN_INPUT = 0; // radians
+        private static final double TURNING_ENCODER_POSITION_PID_MAX_INPUT = TURNING_ENCODER_POSITION_FACTOR; // radians
 
-        sparkFlexConfigDriving.apply(sparkFlexClosedLoopConfigDriving);
+        private final double DRIVING_P;
+        private final double DRIVING_I = 0;
+        private final double DRIVING_D;
+        private final double DRIVING_KS;
+        private final double DRIVING_KV;
+        private static final double DRIVING_MIN_OUTPUT = -1;
 
-        sparkMaxConfigTurning
-                .inverted(TURNING_MOTOR_INVERTED)
-                .idleMode(TURNING_MOTOR_IDLE_MODE)
-                .smartCurrentLimit((int) MotorConstants.NEO550_CURRENT_LIMIT.in(Amps))
-                .voltageCompensation(VOLTAGE_COMPENSATION);
-        sparkMaxConfigTurning.absoluteEncoder.inverted(TURNING_ENCODER_INVERTED);
-        sparkMaxConfigTurning
-                .closedLoop
-                .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
-                .outputRange(TURNING_MIN_OUTPUT, TURNING_MAX_OUTPUT)
-                .positionWrappingEnabled(TURNING_ENCODER_POSITION_WRAPPING)
-                .positionWrappingInputRange(
-                        TURNING_ENCODER_POSITION_PID_MIN_INPUT,
-                        TURNING_ENCODER_POSITION_PID_MAX_INPUT);
-        sparkMaxConfigTurning.signals.absoluteEncoderPositionPeriodMs(
-                (int) RobotConstants.SpeedConstants.MAIN_LOOP_FREQUENCY.in(Milliseconds));
+        private static final double DRIVING_MAX_OUTPUT = 1;
 
-        sparkMaxClosedLoopConfigTurning
-                .pid(TURNING_P, TURNING_I, TURNING_D)
-                .feedForward
-                .sva(TURNING_KS, TURNING_KV, TURNING_KA);
+        private final double TURNING_P;
+        private static final double TURNING_I = 0;
+        private static double TURNING_D;
+        private static final double DRIVING_KA = 0;
+        private static final double TURNING_MIN_OUTPUT = -1;
+        private static final double TURNING_MAX_OUTPUT = 1;
+        private static final double TURNING_KS = 0;
+        private static final double TURNING_KV = 0;
+        private static final double TURNING_KA = 0;
+        private static final double VOLTAGE_COMPENSATION = 12;
 
-        sparkFlexConfigDriving.apply(sparkFlexClosedLoopConfigDriving);
-        sparkMaxConfigTurning.apply(sparkMaxClosedLoopConfigTurning);
+        private static final SparkBaseConfig.IdleMode DRIVING_MOTOR_IDLE_MODE = SparkBaseConfig.IdleMode.kBrake;
+        private static final SparkBaseConfig.IdleMode TURNING_MOTOR_IDLE_MODE = SparkBaseConfig.IdleMode.kBrake;
 
-        var drivingStatus =
-                drivingSparkFlex.configure(
-                        sparkFlexConfigDriving,
-                        ResetMode.kResetSafeParameters,
-                        PersistMode.kPersistParameters);
-        var turningStatus =
-                turningSparkMax.configure(
-                        sparkMaxConfigTurning,
-                        ResetMode.kResetSafeParameters,
-                        PersistMode.kPersistParameters);
+        public SwerveModuleHardwareVortex(
+                        int drivingCanId, int turningCanId, double chassisAngularOffset, String name) {
 
-        drivingRelativeEncoder = drivingSparkFlex.getEncoder();
-        turningAbsoluteEncoder = turningSparkMax.getAbsoluteEncoder();
+                this.chassisAngularOffset = chassisAngularOffset;
+                this.name = name;
+                drivingSparkFlex = new SparkFlex(CANPort.CAN_S0, drivingCanId, MotorType.kBrushless);
+                turningSparkMax = new SparkMax(CANPort.CAN_S0, turningCanId, MotorType.kBrushless);
 
-        drivingPidController = drivingSparkFlex.getClosedLoopController();
-        turningPidController = turningSparkMax.getClosedLoopController();
+                // get from config!
+                DRIVING_KS = DriveConfig.kS;
+                DRIVING_KV = DriveConfig.kV;
+                DRIVING_P = DriveConfig.DRIVE_P;
+                DRIVING_D = DriveConfig.DRIVE_D;
+                TURNING_P = DriveConfig.TURN_P;
+                TURNING_D = DriveConfig.TURN_D;
+                DRIVING_MOTOR_PINION_TEETH = DriveConfig.PINION_TEETH;
 
-        if (drivingStatus != REVLibError.kOk) {
-            System.err.println("Failed to configure driving motor: " + name + " " + drivingStatus);
+                Telemetry.log("drive/config/ks", DRIVING_KS);
+                Telemetry.log("drive/config/kv", DRIVING_KV);
+                Telemetry.log("drive/config/swervedrivep", DRIVING_P);
+                Telemetry.log("drive/config/swervedrived", DRIVING_D);
+                Telemetry.log("drive/config/turnp", TURNING_P);
+                Telemetry.log("drive/config/turnd", TURNING_D);
+                Telemetry.log("drive/config/pinion", DRIVING_MOTOR_PINION_TEETH);
+
+                // 45 teeth on the wheel's bevel gear, 22 teeth on the first-stage spur gear, 15
+                // teeth on the bevel pinion
+                // This is also the gear ratio (14T)
+                // a lot of this had to get moved down here because pinion teeth is variable by
+                // robot & assigned via module config
+                DRIVING_MOTOR_REDUCTION = (45.0 * 22) / (DRIVING_MOTOR_PINION_TEETH * 15);
+
+                DRIVING_ENCODER_POSITION_FACTOR = (WHEEL_DIAMETER.times(Math.PI)).div(DRIVING_MOTOR_REDUCTION); // meters
+                DRIVING_ENCODER_VELOCITY_FACTOR = DRIVING_ENCODER_POSITION_FACTOR.div(60); // meters
+                // per
+                // second
+
+                sparkFlexConfigDriving
+                                .inverted(DRIVING_MOTOR_INVERTED)
+                                .idleMode(DRIVING_MOTOR_IDLE_MODE)
+                                .smartCurrentLimit((int) MotorConstants.VORTEX_CURRENT_LIMIT.in(Amps))
+                                .voltageCompensation(VOLTAGE_COMPENSATION);
+                sparkFlexConfigDriving.closedLoop
+                                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                                .outputRange(DRIVING_MIN_OUTPUT, DRIVING_MAX_OUTPUT);
+
+                sparkFlexClosedLoopConfigDriving
+                                .pid(DRIVING_P, DRIVING_I, DRIVING_D).feedForward
+                                .sva(DRIVING_KS, DRIVING_KV, DRIVING_KA);
+
+                sparkFlexConfigDriving.apply(sparkFlexClosedLoopConfigDriving);
+
+                sparkMaxConfigTurning
+                                .inverted(TURNING_MOTOR_INVERTED)
+                                .idleMode(TURNING_MOTOR_IDLE_MODE)
+                                .smartCurrentLimit((int) MotorConstants.NEO550_CURRENT_LIMIT.in(Amps))
+                                .voltageCompensation(VOLTAGE_COMPENSATION);
+                sparkMaxConfigTurning.absoluteEncoder.inverted(TURNING_ENCODER_INVERTED);
+                sparkMaxConfigTurning.closedLoop
+                                .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
+                                .outputRange(TURNING_MIN_OUTPUT, TURNING_MAX_OUTPUT)
+                                .positionWrappingEnabled(TURNING_ENCODER_POSITION_WRAPPING)
+                                .positionWrappingInputRange(
+                                                TURNING_ENCODER_POSITION_PID_MIN_INPUT,
+                                                TURNING_ENCODER_POSITION_PID_MAX_INPUT);
+                sparkMaxConfigTurning.signals.absoluteEncoderPositionPeriodMs(
+                                (int) RobotConstants.SpeedConstants.MAIN_LOOP_FREQUENCY.in(Milliseconds));
+
+                sparkMaxClosedLoopConfigTurning
+                                .pid(TURNING_P, TURNING_I, TURNING_D).feedForward
+                                .sva(TURNING_KS, TURNING_KV, TURNING_KA);
+
+                sparkFlexConfigDriving.apply(sparkFlexClosedLoopConfigDriving);
+                sparkMaxConfigTurning.apply(sparkMaxClosedLoopConfigTurning);
+
+                var drivingStatus = drivingSparkFlex.configure(
+                                sparkFlexConfigDriving,
+                                ResetMode.kResetSafeParameters,
+                                PersistMode.kPersistParameters);
+                var turningStatus = turningSparkMax.configure(
+                                sparkMaxConfigTurning,
+                                ResetMode.kResetSafeParameters,
+                                PersistMode.kPersistParameters);
+
+                drivingRelativeEncoder = drivingSparkFlex.getEncoder();
+                turningAbsoluteEncoder = turningSparkMax.getAbsoluteEncoder();
+
+                drivingPidController = drivingSparkFlex.getClosedLoopController();
+                turningPidController = turningSparkMax.getClosedLoopController();
+
+                if (drivingStatus != REVLibError.kOk) {
+                        System.err.println("Failed to configure driving motor: " + name + " " + drivingStatus);
+                }
+                if (turningStatus != REVLibError.kOk) {
+                        System.err.println("Failed to configure turning motor: " + name + " " + turningStatus);
+                }
         }
-        if (turningStatus != REVLibError.kOk) {
-            System.err.println("Failed to configure turning motor: " + name + " " + turningStatus);
-        }
-    }
 
-    public void setDriveEncoderPosition(double position) {
-        drivingRelativeEncoder.setPosition(position);
-    }
-    ;
+        public void setDriveEncoderPosition(double position) {
+                drivingRelativeEncoder.setPosition(position);
+        };
 
-    public double getDriveEncoderPosition() {
-        return drivingRelativeEncoder.getPosition().get()
-                * DRIVING_ENCODER_POSITION_FACTOR.in(Meters);
-    }
-
-    public void setDesiredDriveSpeedMPS(double speed, boolean isFlipped) {
-        drivingPidController.setSetpoint(speed, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
-        this.driveDesiredVelocity = speed;
-        this.isOptimizedBackwards = isFlipped;
-    }
-    ;
-
-    public double getDriveEncoderSpeedMPS() {
-        return drivingRelativeEncoder.getVelocity().get()
-                * DRIVING_ENCODER_VELOCITY_FACTOR.in(Meters);
-    }
-    ;
-
-    public double getTurnEncoderPosition() {
-        return turningAbsoluteEncoder.getPosition().get()
-                * TURNING_ENCODER_POSITION_FACTOR;
-    }
-    ;
-
-    public void setDesiredTurnAngle(double angle) {
-        turningPidController.setSetpoint(angle, ControlType.kPosition, ClosedLoopSlot.kSlot0);
-        this.desiredAngle = angle;
-    }
-    ;
-
-    public double getChassisAngularOffset() {
-        return chassisAngularOffset;
-    }
-
-    public void updateStates(SwerveModuleIOStates states) {
-        states.desiredAngle = Units.radiansToDegrees(MathUtil.angleModulus(this.desiredAngle));
-        states.driveEncoderPos = getDriveEncoderPosition();
-        states.driveVoltage =
-                drivingSparkFlex.getBusVoltage().get()
-                 * drivingSparkFlex.getAppliedOutput().get();
-        states.turnVoltage = turningSparkMax.getBusVoltage().get()
-         * turningSparkMax.getAppliedOutput().get();
-        states.driveCurrent = drivingSparkFlex.getOutputCurrent().get();
-        states.turnCurrent = turningSparkMax.getOutputCurrent().get();
-        states.driveDesiredVelocity = this.driveDesiredVelocity;
-
-        if (isOptimizedBackwards) {
-            states.turnAngle = states.desiredAngle + Math.PI;
-            states.driveVelocity = getDriveEncoderSpeedMPS();
-
-        } else {
-            states.turnAngle =
-                    Units.radiansToDegrees(MathUtil.angleModulus(getTurnEncoderPosition()));
-            states.driveVelocity = getDriveEncoderSpeedMPS() * -1;
+        public double getDriveEncoderPosition() {
+                return drivingRelativeEncoder.getPosition().get()
+                                * DRIVING_ENCODER_POSITION_FACTOR.in(Meters);
         }
 
-        Telemetry.log(
-                "Swerve/module " + name + "/turn desired angle (deg)", states.desiredAngle);
-        Telemetry.log("Swerve/module " + name + "/turn angle (deg)", states.turnAngle);
-        Telemetry.log(
-                "Swerve/module " + name + "/drive desired velocity (mps)",
-                states.driveDesiredVelocity);
-        Telemetry.log(
-                "Swerve/module " + name + "/drive velocity (mps)", states.driveVelocity);
-        Telemetry.log(
-                "Swerve/module " + name + "/drive encoder position (m)", states.driveEncoderPos);
-        Telemetry.log(
-                "Swerve/module " + name + "/drive voltage (volt)", states.driveVoltage);
-        Telemetry.log(
-                "Swerve/module " + name + "/turn voltage (volt)", states.turnVoltage);
-        Telemetry.log(
-                "Swerve/module " + name + "/drive current (amps)", states.driveCurrent);
-        Telemetry.log(
-                "Swerve/module " + name + "/turn current (amps)", states.turnCurrent);
-    }
+        public void setDesiredDriveSpeedMPS(double speed, boolean isFlipped) {
+                drivingPidController.setSetpoint(speed, ControlType.kVelocity, ClosedLoopSlot.kSlot0);
+                this.driveDesiredVelocity = speed;
+                this.isOptimizedBackwards = isFlipped;
+        };
+
+        public double getDriveEncoderSpeedMPS() {
+                return drivingRelativeEncoder.getVelocity().get()
+                                * DRIVING_ENCODER_VELOCITY_FACTOR.in(Meters);
+        };
+
+        public double getTurnEncoderPosition() {
+                return turningAbsoluteEncoder.getPosition().get()
+                                * TURNING_ENCODER_POSITION_FACTOR;
+        };
+
+        public void setDesiredTurnAngle(double angle) {
+                turningPidController.setSetpoint(angle, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+                this.desiredAngle = angle;
+        };
+
+        public double getChassisAngularOffset() {
+                return chassisAngularOffset;
+        }
+
+        public void updateStates(SwerveModuleIOStates states) {
+                states.desiredAngle = Units.radiansToDegrees(MathUtil.angleModulus(this.desiredAngle));
+                states.driveEncoderPos = getDriveEncoderPosition();
+                states.driveVoltage = drivingSparkFlex.getBusVoltage().get()
+                                * drivingSparkFlex.getAppliedOutput().get();
+                states.turnVoltage = turningSparkMax.getBusVoltage().get()
+                                * turningSparkMax.getAppliedOutput().get();
+                states.driveCurrent = drivingSparkFlex.getOutputCurrent().get();
+                states.turnCurrent = turningSparkMax.getOutputCurrent().get();
+                states.driveDesiredVelocity = this.driveDesiredVelocity;
+
+                if (isOptimizedBackwards) {
+                        states.turnAngle = states.desiredAngle + Math.PI;
+                        states.driveVelocity = getDriveEncoderSpeedMPS();
+
+                } else {
+                        states.turnAngle = Units.radiansToDegrees(MathUtil.angleModulus(getTurnEncoderPosition()));
+                        states.driveVelocity = getDriveEncoderSpeedMPS() * -1;
+                }
+
+                Telemetry.log(
+                                "Swerve/module " + name + "/turn desired angle (deg)", states.desiredAngle);
+                Telemetry.log("Swerve/module " + name + "/turn angle (deg)", states.turnAngle);
+                Telemetry.log(
+                                "Swerve/module " + name + "/drive desired velocity (mps)",
+                                states.driveDesiredVelocity);
+                Telemetry.log(
+                                "Swerve/module " + name + "/drive velocity (mps)", states.driveVelocity);
+                Telemetry.log(
+                                "Swerve/module " + name + "/drive encoder position (m)", states.driveEncoderPos);
+                Telemetry.log(
+                                "Swerve/module " + name + "/drive voltage (volt)", states.driveVoltage);
+                Telemetry.log(
+                                "Swerve/module " + name + "/turn voltage (volt)", states.turnVoltage);
+                Telemetry.log(
+                                "Swerve/module " + name + "/drive current (amps)", states.driveCurrent);
+                Telemetry.log(
+                                "Swerve/module " + name + "/turn current (amps)", states.turnCurrent);
+        }
 }

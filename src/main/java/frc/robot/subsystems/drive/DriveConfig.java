@@ -30,7 +30,7 @@ public final class DriveConfig {
 
     static {
         switch (SubsystemFactory.getRobotType()) {
-            case COMP:
+            case SYSTEMCORE:
                 kS = 0.15;
                 kV = 2.23;
                 DRIVE_P = 0.35;

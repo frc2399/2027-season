@@ -1,8 +1,8 @@
 package frc.robot;
 
+import org.wpilib.framework.RobotBase;
 import org.wpilib.telemetry.Telemetry;
 
-import org.wpilib.framework.RobotBase;
 import frc.robot.constants.RobotConstants.MotorIdConstants;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.SwerveModule;
@@ -20,8 +20,6 @@ public class SubsystemFactory {
     private static final double REAR_LEFT_CHASSIS_ANGULAR_OFFSET = Math.PI;
     private static final double REAR_RIGHT_CHASSIS_ANGULAR_OFFSET = Math.PI / 2;
 
-    
-
     public enum RobotType {
         SIM,
         COMP,
@@ -32,20 +30,15 @@ public class SubsystemFactory {
 
     // private String serialNum = System.getenv("serialnum");
 
-
     public SubsystemFactory() {
-        robotType = RobotType.SYSTEMCORE;
-        // if (RobotBase.isSimulation()) {
-        //     robotType = RobotType.SIM;
-        //     // serialNum = "simulation";
-        // } else {
-        //     throw new RuntimeException(
-        //             "UNKNOWN SERIAL NUMBER (cannot identify robot based on rio) \nserial number of current rio: "
-        //                     + serialNum);
-        // }
+        if (RobotBase.isSimulation()) {
+            robotType = RobotType.SIM;
+        } else {
+            robotType = RobotType.SYSTEMCORE;
+        }
         // System.out.println("serialNum is " + serialNum);
         // Telemetry.log("robot/serialNum", serialNum);
-       Telemetry.log("robot/robotType", robotType.name());
+        Telemetry.log("robot/robotType", robotType.name());
     }
 
     public static RobotType getRobotType() {
@@ -57,49 +50,41 @@ public class SubsystemFactory {
         SwerveModule rearLeft;
         SwerveModule frontRight;
         SwerveModule rearRight;
-        if (robotType == RobotType.COMP) {
-            frontLeft =
-                    new SwerveModule(
-                            new SwerveModuleHardwareVortex(
-                                    MotorIdConstants.FRONT_LEFT_DRIVING_CAN_ID,
-                                    MotorIdConstants.FRONT_LEFT_TURNING_CAN_ID,
-                                    FRONT_LEFT_CHASSIS_ANGULAR_OFFSET,
-                                    "front left"));
-            frontRight =
-                    new SwerveModule(
-                            new SwerveModuleHardwareVortex(
-                                    MotorIdConstants.FRONT_RIGHT_DRIVING_CAN_ID,
-                                    MotorIdConstants.FRONT_RIGHT_TURNING_CAN_ID,
-                                    FRONT_RIGHT_CHASSIS_ANGULAR_OFFSET,
-                                    "front right"));
-            rearLeft =
-                    new SwerveModule(
-                            new SwerveModuleHardwareVortex(
-                                    MotorIdConstants.REAR_LEFT_DRIVING_CAN_ID,
-                                    MotorIdConstants.REAR_LEFT_TURNING_CAN_ID,
-                                    REAR_LEFT_CHASSIS_ANGULAR_OFFSET,
-                                    "rear left"));
-            rearRight =
-                    new SwerveModule(
-                            new SwerveModuleHardwareVortex(
-                                    MotorIdConstants.REAR_RIGHT_DRIVING_CAN_ID,
-                                    MotorIdConstants.REAR_RIGHT_TURNING_CAN_ID,
-                                    REAR_RIGHT_CHASSIS_ANGULAR_OFFSET,
-                                    "rear right"));
+        if (robotType == RobotType.SYSTEMCORE) {
+            frontLeft = new SwerveModule(
+                    new SwerveModuleHardwareVortex(
+                            MotorIdConstants.FRONT_LEFT_DRIVING_CAN_ID,
+                            MotorIdConstants.FRONT_LEFT_TURNING_CAN_ID,
+                            FRONT_LEFT_CHASSIS_ANGULAR_OFFSET,
+                            "front left"));
+            frontRight = new SwerveModule(
+                    new SwerveModuleHardwareVortex(
+                            MotorIdConstants.FRONT_RIGHT_DRIVING_CAN_ID,
+                            MotorIdConstants.FRONT_RIGHT_TURNING_CAN_ID,
+                            FRONT_RIGHT_CHASSIS_ANGULAR_OFFSET,
+                            "front right"));
+            rearLeft = new SwerveModule(
+                    new SwerveModuleHardwareVortex(
+                            MotorIdConstants.REAR_LEFT_DRIVING_CAN_ID,
+                            MotorIdConstants.REAR_LEFT_TURNING_CAN_ID,
+                            REAR_LEFT_CHASSIS_ANGULAR_OFFSET,
+                            "rear left"));
+            rearRight = new SwerveModule(
+                    new SwerveModuleHardwareVortex(
+                            MotorIdConstants.REAR_RIGHT_DRIVING_CAN_ID,
+                            MotorIdConstants.REAR_RIGHT_TURNING_CAN_ID,
+                            REAR_RIGHT_CHASSIS_ANGULAR_OFFSET,
+                            "rear right"));
             return new DriveSubsystem(frontLeft, frontRight, rearLeft, rearRight, gyro);
         } else if (robotType == RobotType.SIM) {
-            frontLeft =
-                    new SwerveModule(
-                            new SwerveModuleSim(FRONT_LEFT_CHASSIS_ANGULAR_OFFSET, "front left"));
-            frontRight =
-                    new SwerveModule(
-                            new SwerveModuleSim(FRONT_RIGHT_CHASSIS_ANGULAR_OFFSET, "front right"));
-            rearLeft =
-                    new SwerveModule(
-                            new SwerveModuleSim(REAR_LEFT_CHASSIS_ANGULAR_OFFSET, "rear left"));
-            rearRight =
-                    new SwerveModule(
-                            new SwerveModuleSim(REAR_RIGHT_CHASSIS_ANGULAR_OFFSET, "rear right"));
+            frontLeft = new SwerveModule(
+                    new SwerveModuleSim(FRONT_LEFT_CHASSIS_ANGULAR_OFFSET, "front left"));
+            frontRight = new SwerveModule(
+                    new SwerveModuleSim(FRONT_RIGHT_CHASSIS_ANGULAR_OFFSET, "front right"));
+            rearLeft = new SwerveModule(
+                    new SwerveModuleSim(REAR_LEFT_CHASSIS_ANGULAR_OFFSET, "rear left"));
+            rearRight = new SwerveModule(
+                    new SwerveModuleSim(REAR_RIGHT_CHASSIS_ANGULAR_OFFSET, "rear right"));
             return new DriveSubsystem(frontLeft, frontRight, rearLeft, rearRight, gyro);
         } else {
             frontLeft = new SwerveModule(new SwerveModulePlacebo());
@@ -114,7 +99,7 @@ public class SubsystemFactory {
         // Use simulated gyro in simulation mode
         if (Robot.isSimulation()) {
             return new Gyro(new GyroSim());
-        } else if (robotType == RobotType.COMP) {
+        } else if (robotType == RobotType.SYSTEMCORE) {
             return new Gyro(new GyroHardware());
         } else {
             return new Gyro(new GyroPlacebo());
