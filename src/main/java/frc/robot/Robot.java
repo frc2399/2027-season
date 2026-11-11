@@ -5,9 +5,14 @@ package frc.robot;
 
 
 
+import org.wpilib.driverstation.DriverStation;
 import org.wpilib.framework.TimedRobot;
+import org.wpilib.net.WebServer;
+import org.wpilib.system.DataLogManager;
+import org.wpilib.system.Filesystem;
 import org.wpilib.tunable.Selectable;
 import org.wpilib.tunable.Tunables;
+import frc.robot.RobotContainer;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -19,6 +24,8 @@ public class Robot extends TimedRobot {
   private static final String CUSTOM_AUTO = "My Auto";
   private String autoSelected;
   private final Selectable<String> chooser = new Selectable<>();
+      private final RobotContainer robotContainer;
+
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -28,6 +35,12 @@ public class Robot extends TimedRobot {
     chooser.addDefault("Default Auto", DEFAULT_AUTO);
     chooser.add("My Auto", CUSTOM_AUTO);
     Tunables.publish("Auto choices", chooser);
+
+            robotContainer = new RobotContainer();
+        DataLogManager.start();
+        DriverStation.startDataLog(DataLogManager.getLog());
+        WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+
   }
 
   /**

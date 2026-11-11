@@ -24,24 +24,27 @@ public class SubsystemFactory {
 
     public enum RobotType {
         SIM,
-        COMP
+        COMP,
+        SYSTEMCORE
     }
 
     private static RobotType robotType;
 
-    private String serialNum = System.getenv("serialnum");
+    // private String serialNum = System.getenv("serialnum");
 
 
     public SubsystemFactory() {
-        if (RobotBase.isSimulation()) {
-            robotType = RobotType.SIM;
-            serialNum = "simulation";
-        } else {
-            throw new RuntimeException(
-                    "UNKNOWN SERIAL NUMBER (cannot identify robot based on rio) \nserial number of current rio: "
-                            + serialNum);
-        }
-        Telemetry.log("robot/serialNum", serialNum);
+        robotType = RobotType.SYSTEMCORE;
+        // if (RobotBase.isSimulation()) {
+        //     robotType = RobotType.SIM;
+        //     // serialNum = "simulation";
+        // } else {
+        //     throw new RuntimeException(
+        //             "UNKNOWN SERIAL NUMBER (cannot identify robot based on rio) \nserial number of current rio: "
+        //                     + serialNum);
+        // }
+        // System.out.println("serialNum is " + serialNum);
+        // Telemetry.log("robot/serialNum", serialNum);
        Telemetry.log("robot/robotType", robotType.name());
     }
 
