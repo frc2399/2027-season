@@ -23,7 +23,7 @@ public final class PathPlannerConfig {
 
     static {
         switch (SubsystemFactory.getRobotType()) {
-            case COMP:
+            case ALPHA:
                 ROBOT_MASS = Kilograms.of(0);
                 ROBOT_MOI = KilogramSquareMeters.of(0);
                 WHEEL_RADIUS = 0;

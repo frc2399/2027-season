@@ -24,24 +24,21 @@ public class SubsystemFactory {
 
     public enum RobotType {
         SIM,
-        COMP
+        ALPHA
     }
 
     private static RobotType robotType;
 
-    private String serialNum = System.getenv("serialnum");
 
 
     public SubsystemFactory() {
         if (RobotBase.isSimulation()) {
             robotType = RobotType.SIM;
-            serialNum = "simulation";
+            
         } else {
-            throw new RuntimeException(
-                    "UNKNOWN SERIAL NUMBER (cannot identify robot based on rio) \nserial number of current rio: "
-                            + serialNum);
+           robotType = RobotType.ALPHA; 
         }
-        Telemetry.log("robot/serialNum", serialNum);
+
        Telemetry.log("robot/robotType", robotType.name());
     }
 
@@ -54,7 +51,7 @@ public class SubsystemFactory {
         SwerveModule rearLeft;
         SwerveModule frontRight;
         SwerveModule rearRight;
-        if (robotType == RobotType.COMP) {
+        if (robotType == RobotType.ALPHA) {
             frontLeft =
                     new SwerveModule(
                             new SwerveModuleHardwareVortex(
@@ -111,7 +108,7 @@ public class SubsystemFactory {
         // Use simulated gyro in simulation mode
         if (Robot.isSimulation()) {
             return new Gyro(new GyroSim());
-        } else if (robotType == RobotType.COMP) {
+        } else if (robotType == RobotType.ALPHA) {
             return new Gyro(new GyroHardware());
         } else {
             return new Gyro(new GyroPlacebo());
