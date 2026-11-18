@@ -1,10 +1,7 @@
-<<<<<<< Updated upstream
-=======
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
->>>>>>> Stashed changes
 package frc.robot;
 
 import static org.wpilib.units.Units.Degrees;
@@ -12,6 +9,7 @@ import static org.wpilib.units.Units.Degrees;
 import org.wpilib.command2.button.CommandGamepad;
 import org.wpilib.math.util.MathUtil;
 
+import org.wpilib.driverstation.Gamepad.Button;
 import frc.robot.constants.RobotConstants.DriveControlConstants;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.gyro.Gyro;
@@ -23,7 +21,7 @@ import org.wpilib.util.Alert.Level;
 import org.wpilib.util.AlertDataJNI;
 import org.wpilib.driverstation.DriverStation;
 import org.wpilib.driverstation.Alliance;
-import edu.wpi.first.wpilibj.RobotController;
+import org.wpilib.system.RobotController;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.Commands;
 import org.wpilib.command2.button.CommandXboxController;
@@ -99,7 +97,7 @@ public class RobotContainer {
 
             // Get the robot's current angular velocity from the drive subsystem
             // The drive subsystem calculates this from the swerve module states
-            double omegaRadPerSec = drive.getRobotRelativeSpeeds().omegaRadiansPerSecond;
+            double omegaRadPerSec = drive.getRobotRelativeSpeeds().omega;
 
             // Update the simulated gyro with the angular velocity
             gyroSim.setAngularVelocity(omegaRadPerSec);
@@ -107,10 +105,6 @@ public class RobotContainer {
             // Integrate to update the heading (20ms = 0.02 seconds)
             gyroSim.update(0.02);
         }
-    }
-
-    public void disableSubsystems() {
-        drive.disableDriveToPose();
     }
 
     public void configureDefaultCommands() {
@@ -148,22 +142,12 @@ public class RobotContainer {
 
 
 
-        driverController.b().onTrue(commandFactory.resetHeading(Degrees.of(0)));
-        driverController.x().whileTrue(drive.setX());
-    }
+
+        
 
     private void configureButtonBindingsTuningController() {
         
-        tuningController.povDown().onTrue(commandFactory.resetHeading(Degrees.of(180)));
-    }
-    private void setUpAuton() {
-
-        // adds the different auton programs to the list of options on the
-        // SmartDashboard
-        Telemetry.log(
-                "Autos/configure gyro (CHOOSE AUTON THEN CLICK ME!)", resetGyroByAuton());
-        Telemetry.log("alliance/reset blue", resetAllianceBlue());
-        Telemetry.log("alliance/reset red", resetAllianceRed());
+        tuningController.dpadDown().onTrue(commandFactory.resetHeading(Degrees.of(180)));
     }
 
     public Command resetAllianceBlue() {
@@ -190,6 +174,6 @@ public class RobotContainer {
                         && RobotController.getBatteryVoltage()
                                 <= DriveControlConstants.LOW_BATTERY_VOLTAGE));
         driverDisconnected.set(
-                !DriverStation.isJoystickConnected(driverController.getHID().getPort()));
+                !driverController.getHID().isConnected());
     }
 }
