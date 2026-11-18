@@ -9,6 +9,8 @@ package frc.robot.subsystems.drive.gyro;
 
 import static org.wpilib.units.Units.Degrees;
 
+import org.wpilib.hardware.bus.CANPort;
+
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.Pigeon2;
@@ -23,7 +25,7 @@ public class GyroHardware implements GyroIO {
     private final CANBus canBus;
 
     public GyroHardware() {
-        canBus = new CANBus("rio");
+        canBus = new CANBus(CANPort.CAN_S0);
         pigeon = new Pigeon2(RobotConstants.MotorIdConstants.GYRO_CAN_ID, canBus);
         // these three lines disable all status signal readings off the pigeon except
         // for the three we need (the three directly below). this reduces CAN network
