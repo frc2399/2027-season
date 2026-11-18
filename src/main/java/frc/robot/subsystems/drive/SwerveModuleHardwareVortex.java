@@ -112,13 +112,11 @@ public class SwerveModuleHardwareVortex implements SwerveModuleIO {
 
     public SwerveModuleHardwareVortex(
             int drivingCanId, int turningCanId, double chassisAngularOffset, String name) {
-        CANPort drivingCanPort = com.revrobotics.util.CANPorts.fromBusId(drivingCanId);
-        CANPort turningCanPort = com.revrobotics.util.CANPorts.fromBusId(turningCanId);
         
         this.chassisAngularOffset = chassisAngularOffset;
         this.name = name;
-        drivingSparkFlex = new SparkFlex(drivingCanPort, drivingCanId, MotorType.kBrushless);
-        turningSparkMax = new SparkMax(turningCanPort, turningCanId, MotorType.kBrushless);
+        drivingSparkFlex = new SparkFlex(CANPort.CAN_S0, drivingCanId, MotorType.kBrushless);
+        turningSparkMax = new SparkMax(CANPort.CAN_S0, turningCanId, MotorType.kBrushless);
                 
 
         // get from config!
