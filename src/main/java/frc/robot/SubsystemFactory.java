@@ -1,8 +1,8 @@
 package frc.robot;
 
+import org.wpilib.framework.RobotBase;
 import org.wpilib.telemetry.Telemetry;
 
-import org.wpilib.framework.RobotBase;
 import frc.robot.constants.RobotConstants.MotorIdConstants;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.SwerveModule;
@@ -20,8 +20,6 @@ public class SubsystemFactory {
     private static final double REAR_LEFT_CHASSIS_ANGULAR_OFFSET = Math.PI;
     private static final double REAR_RIGHT_CHASSIS_ANGULAR_OFFSET = Math.PI / 2;
 
-    
-
     public enum RobotType {
         SIM,
         ALPHA
@@ -29,6 +27,7 @@ public class SubsystemFactory {
 
     private static RobotType robotType;
 
+    // private String serialNum = System.getenv("serialnum");
 
 
     public SubsystemFactory() {
@@ -82,18 +81,14 @@ public class SubsystemFactory {
                                     "rear right"));
             return new DriveSubsystem(frontLeft, frontRight, rearLeft, rearRight, gyro);
         } else if (robotType == RobotType.SIM) {
-            frontLeft =
-                    new SwerveModule(
-                            new SwerveModuleSim(FRONT_LEFT_CHASSIS_ANGULAR_OFFSET, "front left"));
-            frontRight =
-                    new SwerveModule(
-                            new SwerveModuleSim(FRONT_RIGHT_CHASSIS_ANGULAR_OFFSET, "front right"));
-            rearLeft =
-                    new SwerveModule(
-                            new SwerveModuleSim(REAR_LEFT_CHASSIS_ANGULAR_OFFSET, "rear left"));
-            rearRight =
-                    new SwerveModule(
-                            new SwerveModuleSim(REAR_RIGHT_CHASSIS_ANGULAR_OFFSET, "rear right"));
+            frontLeft = new SwerveModule(
+                    new SwerveModuleSim(FRONT_LEFT_CHASSIS_ANGULAR_OFFSET, "front left"));
+            frontRight = new SwerveModule(
+                    new SwerveModuleSim(FRONT_RIGHT_CHASSIS_ANGULAR_OFFSET, "front right"));
+            rearLeft = new SwerveModule(
+                    new SwerveModuleSim(REAR_LEFT_CHASSIS_ANGULAR_OFFSET, "rear left"));
+            rearRight = new SwerveModule(
+                    new SwerveModuleSim(REAR_RIGHT_CHASSIS_ANGULAR_OFFSET, "rear right"));
             return new DriveSubsystem(frontLeft, frontRight, rearLeft, rearRight, gyro);
         } else {
             frontLeft = new SwerveModule(new SwerveModulePlacebo());

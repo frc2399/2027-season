@@ -1,14 +1,19 @@
 package frc.robot;
 // Copyright (c) FIRST and other WPILib contributors.
 
+import org.wpilib.command2.CommandScheduler;
+
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
 import org.wpilib.driverstation.DriverStation;
 import org.wpilib.framework.TimedRobot;
+import org.wpilib.net.WebServer;
 import org.wpilib.system.DataLogManager;
+import org.wpilib.system.Filesystem;
 import org.wpilib.tunable.Selectable;
 import org.wpilib.tunable.Tunables;
+import frc.robot.RobotContainer;
 
 /**
  * The methods in this class are called automatically corresponding to each
@@ -22,6 +27,7 @@ public class Robot extends TimedRobot {
   private static final String CUSTOM_AUTO = "My Auto";
   private String autoSelected;
   private final Selectable<String> chooser = new Selectable<>();
+  private final RobotContainer robotContainer;
 
   /**
    * This function is run when the robot is first started up and should be used
@@ -34,6 +40,12 @@ public class Robot extends TimedRobot {
     chooser.addDefault("Default Auto", DEFAULT_AUTO);
     chooser.add("My Auto", CUSTOM_AUTO);
     Tunables.publish("Auto choices", chooser);
+
+    robotContainer = new RobotContainer();
+    DataLogManager.start();
+    DriverStation.startDataLog(DataLogManager.getLog());
+    WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+
   }
 
   /**
@@ -48,6 +60,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
+    CommandScheduler.getInstance().run();
+
   }
 
   /**

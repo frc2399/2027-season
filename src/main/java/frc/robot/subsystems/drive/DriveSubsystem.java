@@ -11,20 +11,12 @@ import static org.wpilib.units.Units.MetersPerSecond;
 import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.util.FlippingUtil;
-import com.pathplanner.lib.util.PathPlannerLogging;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
-import frc.robot.Robot;
-import frc.robot.constants.FieldConstants;
-import frc.robot.constants.RobotConstants;
-import frc.robot.subsystems.drive.gyro.Gyro;
-import frc.robot.vision.VisionPoseEstimator.DriveBase;
-
-import org.wpilib.math.linalg.Matrix;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.driverstation.Alliance;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.estimator.SwerveDrivePoseEstimator;
 import org.wpilib.math.filter.Debouncer;
@@ -36,6 +28,7 @@ import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.kinematics.SwerveDriveKinematics;
 import org.wpilib.math.kinematics.SwerveModulePosition;
 import org.wpilib.math.kinematics.SwerveModuleVelocity;
+import org.wpilib.math.linalg.Matrix;
 import org.wpilib.math.numbers.N1;
 import org.wpilib.math.numbers.N3;
 import org.wpilib.math.util.Units;
@@ -44,20 +37,18 @@ import org.wpilib.networktables.StructArrayPublisher;
 import org.wpilib.networktables.StructPublisher;
 import org.wpilib.smartdashboard.Field2d;
 import org.wpilib.smartdashboard.FieldObject2d;
+import org.wpilib.system.Timer;
+import org.wpilib.telemetry.Telemetry;
 import org.wpilib.units.measure.AngularVelocity;
 import org.wpilib.units.measure.Distance;
 import org.wpilib.units.measure.LinearVelocity;
 import org.wpilib.util.Alert;
-import org.wpilib.driverstation.DriverStationErrors;
-import org.wpilib.driverstation.Alliance;
-import org.wpilib.system.Timer;
-import org.wpilib.telemetry.Telemetry;
-import org.wpilib.command2.Command;
-import org.wpilib.command2.SubsystemBase;
 
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
+import frc.robot.Robot;
+import frc.robot.constants.FieldConstants;
+import frc.robot.constants.RobotConstants;
+import frc.robot.subsystems.drive.gyro.Gyro;
+import frc.robot.vision.VisionPoseEstimator.DriveBase;
 
 public class DriveSubsystem extends SubsystemBase implements DriveBase {
     // for drivetopose
@@ -71,8 +62,6 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
     private double HEADING_D;
 
     private PIDController drivePIDController;
-
-    private RobotConfig config;
 
     // debouncer for turning
     private double ROTATION_DEBOUNCE_TIME = 0.5;
@@ -101,14 +90,6 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
     public final Translation2d REAR_RIGHT_OFFSET;
 
     private final SwerveDriveKinematics DRIVE_KINEMATICS;
-
-    private static final double TRANSLATION_P = 5.0;
-    private static final double TRANSLATION_I = 0.0;
-    private static final double TRANSLATION_D = 0.0;
-
-    private static final double ROTATION_P = 5.0;
-    private static final double ROTATION_I = 0.0;
-    private static final double ROTATION_D = 0.0;
 
     // Slew rate filter variables for controlling lateral acceleration
     private double desiredAngle = 0;
@@ -227,30 +208,6 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
                         .publish();
         posePublisher.setDefault(new Pose2d());
 
-        try {
-            config = RobotConfig.fromGUISettings();
-            AutoBuilder.configure(
-                    this::getPose,
-                    this::resetOdometry,
-                    this::getRobotRelativeSpeeds,
-                    (speeds, feedforwards) -> setRobotRelativeSpeeds(speeds),
-                    new PPHolonomicDriveController(
-                            new PIDConstants(TRANSLATION_P, TRANSLATION_I, TRANSLATION_D),
-                            new PIDConstants(ROTATION_P, ROTATION_I, ROTATION_D)),
-                    config, // The robot configuration
-                    () -> {
-                        if (FieldConstants.alliance.isPresent()) {
-                            return FieldConstants.alliance.get() == Alliance.RED;
-                        }
-                        return false;
-                    },
-                    this);
-        } catch (Exception e) {
-            DriverStationErrors.reportError(
-                    "Failed to load Pathplanner config and configure Autobuilder",
-                    e.getStackTrace());
-        }
-        configurePathPlannerLogging();
     }
 
     @Override
@@ -464,23 +421,6 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
         swerveModuleDesiredStatePublisher.set(SwerveModuleVelocities);
     }
 
-    private void configurePathPlannerLogging() {
-        PathPlannerLogging.setLogCurrentPoseCallback(
-                (pose) -> {
-                    field2d.setRobotPose(pose);
-                });
-
-        PathPlannerLogging.setLogTargetPoseCallback(
-                (pose) -> {
-                    field2d.getObject("ROBOT target pose").setPose(pose);
-                });
-
-        PathPlannerLogging.setLogActivePathCallback(
-                (poses) -> {
-                    field2d.getObject("ROBOT path").setPoses(poses);
-                });
-    }
-
     private double getRotRate(
             double currentAngle,
             double rotRate,
@@ -552,63 +492,6 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
     // 4. check for the goal
     // 5. end the robot
 
-    // this method has a LOT of suppliers - so short explanation of why they're good
-    // basically, when a button binding is called in robotContainer, it makes an
-    // object
-    // represnting the command. this object does not change, and it does not
-    // actually look
-    // at the command each time - it just calls the one that was constructed at
-    // robotInit
-    // by using a supplier, the robot knows 'hey, this value might change, so i
-    // should
-    // check it every time i use this object' thus allowing it to change
-    public Command driveToPoseOnExecute(Supplier<Pose2d> wantPose) {
-        return this.run(
-                        () -> {
-                            atGoal = false;
-                            Supplier<Pose2d> goalPose = wantPose;
-
-                            if (FieldConstants.alliance.isPresent()
-                                    && FieldConstants.alliance.get() == Alliance.RED) {
-                                goalPose = () -> FlippingUtil.flipFieldPose(wantPose.get());
-                            }
-
-                            Telemetry.log(
-                                    "drive/vision/goalPoseY", goalPose.get().getY());
-                            Telemetry.log(
-                                    "drive/vision/goalPosex", goalPose.get().getX());
-                            Telemetry.log(
-                                    "drive/vision/goalTheta",
-                                    goalPose.get().getRotation().getDegrees());
-
-                            ChassisVelocities alignmentSpeeds =
-                                    AutoAlignUtil.getDriveToPoseVelocities(
-                                            () -> robotPose, goalPose);
-
-                            // tolerances were accounted for in getDriveToPoseVelocities
-                            atGoal =
-                                    alignmentSpeeds.vx == 0
-                                            && alignmentSpeeds.vy == 0
-                                            && alignmentSpeeds.omega == 0;
-
-                            ChassisVelocities finalAlignmentSpeeds =
-                                            alignmentSpeeds.toRobotRelative(robotPose.getRotation());
-
-                            setRobotRelativeSpeeds(finalAlignmentSpeeds);
-                        })
-                .until(() -> atGoal);
-    }
-
-    public Command disableDriveToPose() {
-        return this.runOnce(
-                () -> {
-                    atGoal = true;
-                    frontLeft.setDesiredState(new SwerveModuleVelocity(0, Rotation2d.fromDegrees(0)));
-                    frontRight.setDesiredState(new SwerveModuleVelocity(0, Rotation2d.fromDegrees(0)));
-                    rearLeft.setDesiredState(new SwerveModuleVelocity(0, Rotation2d.fromDegrees(0)));
-                    rearRight.setDesiredState(new SwerveModuleVelocity(0, Rotation2d.fromDegrees(0)));
-                });
-    }
 
     private void logAndUpdateDriveSubsystemStates() {
         states.pose = getPose();

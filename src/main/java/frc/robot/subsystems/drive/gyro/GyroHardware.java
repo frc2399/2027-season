@@ -27,6 +27,7 @@ public class GyroHardware implements GyroIO {
     public GyroHardware() {
         canBus = new CANBus(CANPort.CAN_S0);
         pigeon = new Pigeon2(RobotConstants.MotorIdConstants.GYRO_CAN_ID, canBus);
+
         // these three lines disable all status signal readings off the pigeon except
         // for the three we need (the three directly below). this reduces CAN network
         // utilization
