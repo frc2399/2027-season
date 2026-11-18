@@ -83,7 +83,7 @@ public class SwerveModule {
         correctedDesiredState.optimize(new Rotation2d(getTurnEncoderPosition()));
         io.setDesiredDriveSpeedMPS(
                 correctedDesiredState.velocity,
-                correctedDesiredState.angle != newDesiredState.angle);
+                !newDesiredState.angle.equals(correctedDesiredState.angle));
         io.setDesiredTurnAngle(correctedDesiredState.angle.getRadians());
         desiredState = newDesiredState;
     }
