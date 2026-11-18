@@ -11,13 +11,6 @@ import static org.wpilib.units.Units.MetersPerSecond;
 import static org.wpilib.units.Units.Radians;
 import static org.wpilib.units.Units.RadiansPerSecond;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.util.FlippingUtil;
-import com.pathplanner.lib.util.PathPlannerLogging;
-
 import frc.robot.Robot;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.RobotConstants;
@@ -72,7 +65,7 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
 
     private PIDController drivePIDController;
 
-    private RobotConfig config;
+
 
     // debouncer for turning
     private double ROTATION_DEBOUNCE_TIME = 0.5;
@@ -226,33 +219,8 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
                         .getStructTopic("drive/EstimatedPose", Pose2d.struct)
                         .publish();
         posePublisher.setDefault(new Pose2d());
-
-        try {
-            config = RobotConfig.fromGUISettings();
-            AutoBuilder.configure(
-                    this::getPose,
-                    this::resetOdometry,
-                    this::getRobotRelativeSpeeds,
-                    (speeds, feedforwards) -> setRobotRelativeSpeeds(speeds),
-                    new PPHolonomicDriveController(
-                            new PIDConstants(TRANSLATION_P, TRANSLATION_I, TRANSLATION_D),
-                            new PIDConstants(ROTATION_P, ROTATION_I, ROTATION_D)),
-                    config, // The robot configuration
-                    () -> {
-                        if (FieldConstants.alliance.isPresent()) {
-                            return FieldConstants.alliance.get() == Alliance.RED;
-                        }
-                        return false;
-                    },
-                    this);
-        } catch (Exception e) {
-            DriverStationErrors.reportError(
-                    "Failed to load Pathplanner config and configure Autobuilder",
-                    e.getStackTrace());
-        }
-        configurePathPlannerLogging();
-    }
-
+            }
+    
     @Override
     public void periodic() {
         Telemetry.log("/drive/atGoal", atGoal);
@@ -464,22 +432,7 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
         swerveModuleDesiredStatePublisher.set(SwerveModuleVelocities);
     }
 
-    private void configurePathPlannerLogging() {
-        PathPlannerLogging.setLogCurrentPoseCallback(
-                (pose) -> {
-                    field2d.setRobotPose(pose);
-                });
 
-        PathPlannerLogging.setLogTargetPoseCallback(
-                (pose) -> {
-                    field2d.getObject("ROBOT target pose").setPose(pose);
-                });
-
-        PathPlannerLogging.setLogActivePathCallback(
-                (poses) -> {
-                    field2d.getObject("ROBOT path").setPoses(poses);
-                });
-    }
 
     private double getRotRate(
             double currentAngle,
@@ -562,42 +515,7 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
     // by using a supplier, the robot knows 'hey, this value might change, so i
     // should
     // check it every time i use this object' thus allowing it to change
-    public Command driveToPoseOnExecute(Supplier<Pose2d> wantPose) {
-        return this.run(
-                        () -> {
-                            atGoal = false;
-                            Supplier<Pose2d> goalPose = wantPose;
-
-                            if (FieldConstants.alliance.isPresent()
-                                    && FieldConstants.alliance.get() == Alliance.RED) {
-                                goalPose = () -> FlippingUtil.flipFieldPose(wantPose.get());
-                            }
-
-                            Telemetry.log(
-                                    "drive/vision/goalPoseY", goalPose.get().getY());
-                            Telemetry.log(
-                                    "drive/vision/goalPosex", goalPose.get().getX());
-                            Telemetry.log(
-                                    "drive/vision/goalTheta",
-                                    goalPose.get().getRotation().getDegrees());
-
-                            ChassisVelocities alignmentSpeeds =
-                                    AutoAlignUtil.getDriveToPoseVelocities(
-                                            () -> robotPose, goalPose);
-
-                            // tolerances were accounted for in getDriveToPoseVelocities
-                            atGoal =
-                                    alignmentSpeeds.vx == 0
-                                            && alignmentSpeeds.vy == 0
-                                            && alignmentSpeeds.omega == 0;
-
-                            ChassisVelocities finalAlignmentSpeeds =
-                                            alignmentSpeeds.toRobotRelative(robotPose.getRotation());
-
-                            setRobotRelativeSpeeds(finalAlignmentSpeeds);
-                        })
-                .until(() -> atGoal);
-    }
+    
 
     public Command disableDriveToPose() {
         return this.runOnce(
