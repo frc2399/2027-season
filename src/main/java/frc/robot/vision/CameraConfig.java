@@ -26,7 +26,7 @@ public class CameraConfig {
 
     static {
         switch (SubsystemFactory.getRobotType()) {
-            case COMP:
+            case ALPHA:
                 LIMELIGHT_NAME = "";
                 CAMERA_PITCH = Degrees.of(32.794);
                 CAMERA_YAW = Degrees.of(9.937);
