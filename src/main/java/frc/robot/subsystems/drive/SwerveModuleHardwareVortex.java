@@ -33,37 +33,108 @@ import frc.robot.constants.RobotConstants.MotorConstants;
 
 public class SwerveModuleHardwareVortex implements SwerveModuleIO {
 
-        private SparkFlex drivingSparkFlex;
-        private SparkMax turningSparkMax;
+    private SparkFlex drivingSparkFlex;
+    private SparkMax turningSparkMax;
 
-        private final RelativeEncoder drivingRelativeEncoder;
-        private final SparkAbsoluteEncoder turningAbsoluteEncoder;
+    private final RelativeEncoder drivingRelativeEncoder;
+    private final SparkAbsoluteEncoder turningAbsoluteEncoder;
 
-        private final SparkClosedLoopController drivingPidController;
-        private final SparkClosedLoopController turningPidController;
+    private final SparkClosedLoopController drivingPidController;
+    private final SparkClosedLoopController turningPidController;
 
-        private double chassisAngularOffset;
-        private String name;
-        private double desiredAngle;
-        private double driveDesiredVelocity;
-        private static final SparkFlexConfig sparkFlexConfigDriving = new SparkFlexConfig();
-        private static final ClosedLoopConfig sparkFlexClosedLoopConfigDriving = new ClosedLoopConfig();
-        private static final SparkMaxConfig sparkMaxConfigTurning = new SparkMaxConfig();
-        private static final ClosedLoopConfig sparkMaxClosedLoopConfigTurning = new ClosedLoopConfig();
+    private double chassisAngularOffset;
+    private String name;
+    private double desiredAngle;
+    private double driveDesiredVelocity;
+    private static final SparkFlexConfig sparkFlexConfigDriving = new SparkFlexConfig();
+    private static final ClosedLoopConfig sparkFlexClosedLoopConfigDriving = new ClosedLoopConfig();
+    private static final SparkMaxConfig sparkMaxConfigTurning = new SparkMaxConfig();
+    private static final ClosedLoopConfig sparkMaxClosedLoopConfigTurning = new ClosedLoopConfig();
 
-        private boolean isOptimizedBackwards = false;
+    private boolean isOptimizedBackwards = false;
 
-        // drivings are NEO Vortex, turnings are NEO 550s
-        private static int DRIVING_MOTOR_PINION_TEETH;
+    // drivings are NEO Vortex, turnings are NEO 550s
+    private static int DRIVING_MOTOR_PINION_TEETH;
 
-        // Invert the turning encoder, since the output shaft rotates in the opposite
-        // direction of the steering motor in the MAXSwerve Module.
-        private static final boolean TURNING_ENCODER_INVERTED = true;
-        private static final boolean DRIVING_MOTOR_INVERTED = false;
-        private static final boolean TURNING_MOTOR_INVERTED = false;
+    // Invert the turning encoder, since the output shaft rotates in the opposite
+    // direction of the steering motor in the MAXSwerve Module.
+    private static final boolean TURNING_ENCODER_INVERTED = true;
+    private static final boolean DRIVING_MOTOR_INVERTED = false;
+    private static final boolean TURNING_MOTOR_INVERTED = false;
 
-        // Calculations required for driving motor conversion factors and feed forward
-        private static final Distance WHEEL_DIAMETER = Inches.of(1.5 * 2);
+    // Calculations required for driving motor conversion factors and feed forward
+    private static final Distance WHEEL_DIAMETER = Inches.of(1.5 * 2);
+
+    // 45 teeth on the wheel's bevel gear, 22 teeth on the first-stage spur gear, 15
+    // teeth on the bevel pinion
+    // This is also the gear ratio (14T)
+
+    private final double DRIVING_MOTOR_REDUCTION;
+
+
+
+    private final Distance DRIVING_ENCODER_POSITION_FACTOR; // meters
+    private final Distance DRIVING_ENCODER_VELOCITY_FACTOR; // meters
+    // per
+    // second
+
+    private static final double TURNING_ENCODER_POSITION_FACTOR = Units.rotationsToRadians(1);
+
+    private static final boolean TURNING_ENCODER_POSITION_WRAPPING = true;
+    private static final double TURNING_ENCODER_POSITION_PID_MIN_INPUT = 0; // radians
+    private static final double TURNING_ENCODER_POSITION_PID_MAX_INPUT =
+            TURNING_ENCODER_POSITION_FACTOR; // radians
+
+    private final double DRIVING_P;
+    private final double DRIVING_I = 0;
+    private final double DRIVING_D;
+    private final double DRIVING_KS;
+    private final double DRIVING_KV;
+    private static final double DRIVING_MIN_OUTPUT = -1;
+
+    private static final double DRIVING_MAX_OUTPUT = 1;
+
+    private final double TURNING_P;
+    private static final double TURNING_I = 0;
+    private static double TURNING_D;
+    private static final double DRIVING_KA = 0;
+    private static final double TURNING_MIN_OUTPUT = -1;
+    private static final double TURNING_MAX_OUTPUT = 1;
+    private static final double TURNING_KS = 0;
+    private static final double TURNING_KV = 0;
+    private static final double TURNING_KA = 0;
+    private static final double VOLTAGE_COMPENSATION = 12;
+
+    private static final SparkBaseConfig.IdleMode DRIVING_MOTOR_IDLE_MODE =
+            SparkBaseConfig.IdleMode.kBrake;
+    private static final SparkBaseConfig.IdleMode TURNING_MOTOR_IDLE_MODE =
+            SparkBaseConfig.IdleMode.kBrake;
+
+    public SwerveModuleHardwareVortex(
+            int drivingCanId, int turningCanId, double chassisAngularOffset, String name) {
+        
+        this.chassisAngularOffset = chassisAngularOffset;
+        this.name = name;
+        drivingSparkFlex = new SparkFlex(CANPort.CAN_S0, drivingCanId, MotorType.kBrushless);
+        turningSparkMax = new SparkMax(CANPort.CAN_S0, turningCanId, MotorType.kBrushless);
+                
+
+        // get from config!
+        DRIVING_KS = DriveConfig.kS;
+        DRIVING_KV = DriveConfig.kV;
+        DRIVING_P = DriveConfig.DRIVE_P;
+        DRIVING_D = DriveConfig.DRIVE_D;
+        TURNING_P = DriveConfig.TURN_P;
+        TURNING_D = DriveConfig.TURN_D;
+        DRIVING_MOTOR_PINION_TEETH = DriveConfig.PINION_TEETH;
+
+        Telemetry.log("drive/config/ks", DRIVING_KS);
+        Telemetry.log("drive/config/kv", DRIVING_KV);
+        Telemetry.log("drive/config/swervedrivep", DRIVING_P);
+        Telemetry.log("drive/config/swervedrived", DRIVING_D);
+        Telemetry.log("drive/config/turnp", TURNING_P);
+        Telemetry.log("drive/config/turnd", TURNING_D);
+        Telemetry.log("drive/config/pinion", DRIVING_MOTOR_PINION_TEETH);
 
         // 45 teeth on the wheel's bevel gear, 22 teeth on the first-stage spur gear, 15
         // teeth on the bevel pinion

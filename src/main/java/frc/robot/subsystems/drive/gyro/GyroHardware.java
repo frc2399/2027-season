@@ -25,7 +25,6 @@ public class GyroHardware implements GyroIO {
     private final CANBus canBus;
 
     public GyroHardware() {
-
         canBus = new CANBus(CANPort.CAN_S0);
         pigeon = new Pigeon2(RobotConstants.MotorIdConstants.GYRO_CAN_ID, canBus);
 

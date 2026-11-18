@@ -35,6 +35,8 @@ public class Robot extends TimedRobot {
    * initialization code.
    */
   public Robot() {
+    DataLogManager.start(); // /u/logs on USB, else /home/systemcore/logs
+    DriverStation.startDataLog(DataLogManager.getLog(), true); // DS state + joysticks
     chooser.addDefault("Default Auto", DEFAULT_AUTO);
     chooser.add("My Auto", CUSTOM_AUTO);
     Tunables.publish("Auto choices", chooser);
