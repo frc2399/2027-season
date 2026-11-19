@@ -15,7 +15,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.util.FlippingUtil;
 import com.pathplanner.lib.util.PathPlannerLogging;
 
 import frc.robot.Robot;
@@ -57,7 +56,6 @@ import org.wpilib.command2.SubsystemBase;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
 public class DriveSubsystem extends SubsystemBase implements DriveBase {
     // for drivetopose
@@ -562,42 +560,7 @@ public class DriveSubsystem extends SubsystemBase implements DriveBase {
     // by using a supplier, the robot knows 'hey, this value might change, so i
     // should
     // check it every time i use this object' thus allowing it to change
-    public Command driveToPoseOnExecute(Supplier<Pose2d> wantPose) {
-        return this.run(
-                        () -> {
-                            atGoal = false;
-                            Supplier<Pose2d> goalPose = wantPose;
-
-                            if (FieldConstants.alliance.isPresent()
-                                    && FieldConstants.alliance.get() == Alliance.RED) {
-                                goalPose = () -> FlippingUtil.flipFieldPose(wantPose.get());
-                            }
-
-                            Telemetry.log(
-                                    "drive/vision/goalPoseY", goalPose.get().getY());
-                            Telemetry.log(
-                                    "drive/vision/goalPosex", goalPose.get().getX());
-                            Telemetry.log(
-                                    "drive/vision/goalTheta",
-                                    goalPose.get().getRotation().getDegrees());
-
-                            ChassisVelocities alignmentSpeeds =
-                                    AutoAlignUtil.getDriveToPoseVelocities(
-                                            () -> robotPose, goalPose);
-
-                            // tolerances were accounted for in getDriveToPoseVelocities
-                            atGoal =
-                                    alignmentSpeeds.vx == 0
-                                            && alignmentSpeeds.vy == 0
-                                            && alignmentSpeeds.omega == 0;
-
-                            ChassisVelocities finalAlignmentSpeeds =
-                                            alignmentSpeeds.toRobotRelative(robotPose.getRotation());
-
-                            setRobotRelativeSpeeds(finalAlignmentSpeeds);
-                        })
-                .until(() -> atGoal);
-    }
+    
 
     public Command disableDriveToPose() {
         return this.runOnce(
